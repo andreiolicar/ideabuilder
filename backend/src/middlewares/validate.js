@@ -18,7 +18,9 @@ const validate = (schema) => (req, _res, next) => {
     return next();
   } catch (error) {
     if (error instanceof ZodError) {
-      return next(httpError(400, "Validation failed", error.flatten()));
+      return next(
+        httpError(400, "Validation failed", error.flatten(), "VALIDATION_ERROR")
+      );
     }
 
     return next(error);

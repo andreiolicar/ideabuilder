@@ -2,6 +2,7 @@ const express = require("express");
 const { v4: uuidv4 } = require("uuid");
 const authRoutes = require("../modules/auth/auth.routes");
 const adminRoutes = require("../modules/admin/admin.routes");
+const projectsRoutes = require("../modules/projects/projects.routes");
 const auth = require("../middlewares/auth");
 const requireRole = require("../middlewares/requireRole");
 
@@ -16,6 +17,7 @@ router.get("/health", (_req, res) => {
 });
 
 router.use("/auth", authRoutes);
+router.use("/projects", auth, projectsRoutes);
 router.use("/admin", auth, requireRole("ADMIN"), adminRoutes);
 
 module.exports = router;

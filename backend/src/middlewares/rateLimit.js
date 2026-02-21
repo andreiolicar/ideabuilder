@@ -12,7 +12,10 @@ const authRateLimit = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: "Too many auth attempts, try again later." }
+  message: {
+    code: "RATE_LIMITED",
+    message: "Too many auth attempts, try again later."
+  }
 });
 
 const generationRateLimit = rateLimit({
@@ -20,7 +23,10 @@ const generationRateLimit = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { message: "Too many generation attempts, try again later." }
+  message: {
+    code: "RATE_LIMITED",
+    message: "Too many generation attempts, try again later."
+  }
 });
 
 module.exports = {

@@ -1,25 +1,30 @@
 const express = require("express");
+const morgan = require("morgan");
 const cors = require("cors");
 const helmet = require("helmet");
 const env = require("./config/env");
 const routes = require("./routes");
-const { globalRateLimit } = require("./middlewares/rateLimit");
 const {
   notFoundHandler,
   errorHandler
 } = require("./middlewares/errorHandler");
 
 const app = express();
+const corsOrigins = env.corsOrigin
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(helmet());
+app.use(morgan(env.nodeEnv === "production" ? "combined" : "dev"));
 app.use(
   cors({
-    origin: env.corsOrigin === "*" ? true : env.corsOrigin,
+    origin:
+      corsOrigins.length === 0 || corsOrigins.includes("*") ? true : corsOrigins,
     credentials: true
   })
 );
 app.use(express.json({ limit: "1mb" }));
-app.use(globalRateLimit);
 
 app.use("/api", routes);
 

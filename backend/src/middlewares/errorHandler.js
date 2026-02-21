@@ -1,19 +1,28 @@
 const { HttpError } = require("../utils/httpError");
 
 const notFoundHandler = (_req, _res, next) => {
-  next(new HttpError(404, "Route not found"));
+  next(new HttpError(404, "Route not found", null, "ROUTE_NOT_FOUND"));
 };
 
 const errorHandler = (err, _req, res, _next) => {
   if (err instanceof HttpError) {
-    return res.status(err.statusCode).json({
+    const payload = {
+      code: err.code,
       message: err.message,
-      details: err.details
-    });
+    };
+
+    if (err.details) {
+      payload.details = err.details;
+    }
+
+    return res.status(err.statusCode).json(payload);
   }
 
   console.error(err);
-  return res.status(500).json({ message: "Internal server error" });
+  return res.status(500).json({
+    code: "INTERNAL_SERVER_ERROR",
+    message: "Internal server error"
+  });
 };
 
 module.exports = {

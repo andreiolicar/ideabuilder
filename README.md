@@ -116,3 +116,49 @@ Este projeto está sendo desenvolvido para auxiliar estudantes que buscam ideias
 ## ▶️ Status do projeto
 
 🚧 Em desenvolvimento (MVP)
+---
+
+## Backend Setup (MVP)
+
+1. Entre na pasta do backend:
+   - `cd backend`
+2. Instale as dependencias:
+   - `npm install`
+3. Configure variaveis de ambiente:
+   - copie `backend/.env.example` para `backend/.env`
+   - ajuste `DATABASE_URL`, `JWT_*`, `GEMINI_API_KEY`, `CORS_ORIGIN`
+4. Rode as migrations:
+   - `npm run db:migrate`
+5. Inicie a API:
+   - desenvolvimento: `npm run dev`
+   - producao: `npm run start`
+
+Base URL local: `http://localhost:4000/api`
+
+## Endpoints principais (resumo)
+
+Auth:
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+
+Projects:
+- `GET /projects`
+- `POST /projects/generate`
+- `GET /projects/:id`
+- `PATCH /projects/:id`
+
+Admin (requer role ADMIN):
+- `GET /admin/users`
+- `PATCH /admin/users/:id/credits`
+- `GET /admin/credits/ledger`
+
+## Observacoes de infraestrutura
+
+- `helmet` habilitado.
+- `cors` configurado por `CORS_ORIGIN` (aceita lista separada por virgula).
+- rate limit aplicado em `/auth/*` e `POST /projects/generate`.
+- validacao centralizada com middleware `validate` (Zod).
+- tratamento de erro padronizado com `code` e `message`.
+- logs de request via `morgan`.
