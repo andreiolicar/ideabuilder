@@ -1,0 +1,81 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f5f7fa;
+  --bg-accent: #edf4f6;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --text: #18181b;
+  --text-muted: #6b7280;
+  --ring: #0f766e;
+  --primary: #0f766e;
+  --primary-strong: #115e59;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 12% 10%, var(--bg-accent), transparent 40%),
+    radial-gradient(circle at 90% 18%, #eef2ff, transparent 35%),
+    var(--bg);
+  color: var(--text);
+  font-family:
+    "SF Pro Text",
+    "Avenir Next",
+    "Segoe UI",
+    "Helvetica Neue",
+    "Noto Sans",
+    sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ring) 70%, white);
+  outline-offset: 2px;
+}
+
+.app-shell {
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 2.5rem 1.25rem;
+}
+
+.panel {
+  border: 1px solid rgb(228 228 231 / 0.8);
+  border-radius: 1.25rem;
+  background: rgb(255 255 255 / 0.92);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.03),
+    0 12px 35px rgb(15 23 42 / 0.04);
+  backdrop-filter: blur(8px);
+}
+
+.muted {
+  color: var(--text-muted);
+}
