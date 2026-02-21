@@ -162,3 +162,15 @@ Admin (requer role ADMIN):
 - validacao centralizada com middleware `validate` (Zod).
 - tratamento de erro padronizado com `code` e `message`.
 - logs de request via `morgan`.
+
+## Comandos na raiz
+
+Comandos para facilitar o fluxo sem trocar de pasta:
+
+1. Instalar dependencias do backend e frontend:
+   - `npm run install:all`
+2. Executar backend e frontend juntos:
+   - `npm run dev`
+3. Executar migrations e seeders do backend:
+   - `npm run db:setup`
+   - o script roda `db:migrate` e, se houver seeders, executa `db:seed:all`

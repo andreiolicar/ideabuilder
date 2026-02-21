@@ -1,0 +1,13 @@
+{
+  "name": "tcc-idea-builder-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "db:setup": "npm --prefix backend run db:migrate && npm --prefix backend run db:seed:all --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
