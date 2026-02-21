@@ -8,6 +8,9 @@ const env = {
   databaseUrl:
     process.env.DATABASE_URL ||
     "postgres://postgres:postgres@localhost:5432/tcc_idea_builder",
+  databaseUrlTest:
+    process.env.DATABASE_URL_TEST ||
+    "postgres://postgres:postgres@localhost:5432/tcc_idea_builder_test",
   corsOrigin: process.env.CORS_ORIGIN || "*",
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET || "dev-access-secret",
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || "dev-refresh-secret",
