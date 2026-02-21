@@ -1,0 +1,11 @@
+# Node Modules
+backend/node_modules
+frontend/node_modules
+node_modules
+
+# Documentação de Desenvolvimento
+/docs
+
+# Variáveis de Ambiente
+.env
+backend/.env
