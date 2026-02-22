@@ -6,8 +6,12 @@ const env = require("../../config/env");
 const { User, RefreshToken, sequelize } = require("../../models");
 const { httpError } = require("../../utils/httpError");
 const emailService = require("../../services/email/email.service");
+const verificationCodeService = require("../../services/verificationCode/verificationCode.service");
 
 const SALT_ROUNDS = 12;
+const PURPOSE = {
+  PASSWORD_RESET: "PASSWORD_RESET"
+};
 
 const sanitizeUser = (user) => ({
   id: user.id,
@@ -246,10 +250,86 @@ const revokeAllSessions = async (userId) => {
   );
 };
 
+const forgotPasswordRequestCode = async (email) => {
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({
+    where: { email: normalizedEmail },
+    attributes: ["id", "email"]
+  });
+
+  if (user) {
+    try {
+      const { code } = await verificationCodeService.requestCode({
+        userId: user.id,
+        email: user.email,
+        purpose: PURPOSE.PASSWORD_RESET
+      });
+
+      await emailService.enqueueEmail("SECURITY_CODE", {
+        userId: user.id,
+        toEmail: user.email,
+        force: true,
+        payload: {
+          code,
+          context: "Redefinicao de senha"
+        }
+      });
+    } catch (error) {
+      console.error("[auth] forgot-password request failed:", error.message);
+    }
+  }
+
+  return {
+    message:
+      "Se o e-mail estiver cadastrado, enviaremos um codigo de redefinicao."
+  };
+};
+
+const forgotPasswordConfirm = async ({ email, code, newPassword }) => {
+  const normalizedEmail = email.toLowerCase();
+  const user = await User.findOne({
+    where: { email: normalizedEmail },
+    attributes: ["id", "email"]
+  });
+
+  if (!user) {
+    throw httpError(400, "Codigo invalido ou expirado");
+  }
+
+  await sequelize.transaction(async (transaction) => {
+    await verificationCodeService.verifyCode(
+      {
+        userId: user.id,
+        email: user.email,
+        purpose: PURPOSE.PASSWORD_RESET,
+        code
+      },
+      { transaction }
+    );
+
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await User.update(
+      { passwordHash },
+      {
+        where: { id: user.id },
+        transaction
+      }
+    );
+  });
+
+  await revokeAllSessions(user.id);
+  return {
+    message: "Senha redefinida com sucesso",
+    requiresReauth: true
+  };
+};
+
 module.exports = {
   register,
   login,
   refreshSession,
   logout,
-  revokeAllSessions
+  revokeAllSessions,
+  forgotPasswordRequestCode,
+  forgotPasswordConfirm
 };

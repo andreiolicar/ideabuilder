@@ -1307,6 +1307,14 @@ select:focus-visible {
   gap: var(--space-3);
 }
 
+.profile-password-grid {
+  align-items: start;
+}
+
+.settings-span-2 {
+  grid-column: span 2;
+}
+
 .settings-actions {
   display: flex;
   justify-content: flex-end;
@@ -1370,6 +1378,69 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+}
+
+.auth-recovery {
+  display: grid;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.auth-recovery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.auth-recovery-toggle {
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+
+.auth-recovery-toggle:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+  background: var(--bg-glass-hover);
+}
+
+.auth-inline-link {
+  border: none;
+  background: transparent;
+  color: var(--accent-primary);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+
+.auth-inline-link:hover {
+  color: var(--accent-hover);
+}
+
+.auth-recovery-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.auth-recovery-panel {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-4px);
+  transition: max-height var(--transition-base), opacity var(--transition-base), transform var(--transition-base);
+}
+
+.auth-recovery-panel.open {
+  max-height: 520px;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .app-icon {
@@ -1583,6 +1654,10 @@ select:focus-visible {
 
   .settings-grid {
     grid-template-columns: 1fr;
+  }
+
+  .settings-span-2 {
+    grid-column: auto;
   }
 
   .settings-security-row {

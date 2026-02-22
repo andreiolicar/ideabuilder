@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Chip from "./ui/Chip.jsx";
 
 function getInitials(name) {
@@ -11,6 +12,7 @@ function getInitials(name) {
 }
 
 function UserProfile({ user, credits = "--" }) {
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuClosing, setMenuClosing] = useState(false);
@@ -87,7 +89,15 @@ function UserProfile({ user, credits = "--" }) {
 
         {menuVisible ? (
           <div className={["dropdown-menu user-profile-dropdown", menuClosing ? "dropdown-exit" : "dropdown-enter"].join(" ")} role="menu">
-            <button type="button" className="dropdown-item" role="menuitem" onClick={closeMenu}>
+            <button
+              type="button"
+              className="dropdown-item"
+              role="menuitem"
+              onClick={() => {
+                closeMenu();
+                navigate("/profile");
+              }}
+            >
               Editar perfil
             </button>
           </div>

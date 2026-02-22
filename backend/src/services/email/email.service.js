@@ -21,7 +21,7 @@ const shouldSendEmailForUser = async (userId, options = {}) => {
 
 const enqueueEmail = async (
   eventType,
-  { userId = null, toEmail, payload = {} },
+  { userId = null, toEmail, payload = {}, force = false },
   options = {}
 ) => {
   if (!env.emailEnabled) {
@@ -32,7 +32,7 @@ const enqueueEmail = async (
     return null;
   }
 
-  const allowed = await shouldSendEmailForUser(userId, options);
+  const allowed = force ? true : await shouldSendEmailForUser(userId, options);
   if (!allowed) {
     return null;
   }

@@ -42,6 +42,10 @@ module.exports = (sequelize, DataTypes) => {
     });
     User.hasMany(models.CreditLedger, { foreignKey: "user_id", as: "ledger" });
     User.hasMany(models.EmailQueue, { foreignKey: "user_id", as: "emails" });
+    User.hasMany(models.AuthVerificationCode, {
+      foreignKey: "user_id",
+      as: "verificationCodes"
+    });
     User.hasOne(models.UserSetting, { foreignKey: "user_id", as: "settings" });
   };
 

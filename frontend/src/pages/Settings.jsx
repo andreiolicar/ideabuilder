@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import DashboardSidebar from "../components/DashboardSidebar.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
@@ -9,6 +9,7 @@ import {
   DashboardIcon,
   LedgerIcon,
   LogoutIcon,
+  ProfileIcon,
   SettingsIcon,
   UsersIcon
 } from "../components/ui/SidebarIcons.jsx";
@@ -26,6 +27,7 @@ const defaultSettings = {
 };
 
 function Settings() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { addToast } = useToast();
@@ -154,16 +156,23 @@ function Settings() {
         title: "Preferencias",
         items: [
           {
+            key: "profile",
+            label: "Perfil",
+            to: "/profile",
+            active: location.pathname === "/profile",
+            icon: <ProfileIcon />
+          },
+          {
             key: "settings",
             label: "Configuracoes",
             to: "/settings",
-            active: true,
+            active: location.pathname === "/settings",
             icon: <SettingsIcon />
           }
         ]
       }
     ],
-    [isAdmin]
+    [isAdmin, location.pathname]
   );
 
   return (

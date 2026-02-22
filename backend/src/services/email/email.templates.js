@@ -100,6 +100,23 @@ const buildCreditsChangedTemplate = (payload = {}) => {
   };
 };
 
+const buildSecurityCodeTemplate = (payload = {}) => {
+  const subject = "Codigo de verificacao - TCC Idea Builder";
+  return {
+    subject,
+    html: wrapTemplate({
+      title: "Codigo de verificacao",
+      subtitle: "Use o codigo abaixo para concluir a acao com seguranca.",
+      contentBlocks: [
+        `Codigo: <strong style="font-size:20px;letter-spacing:2px;">${escapeHtml(payload.code || "------")}</strong>`,
+        `Motivo: <strong>${escapeHtml(payload.context || "Verificacao de seguranca")}</strong>`,
+        "Este codigo expira em 10 minutos."
+      ]
+    }),
+    text: `Codigo de verificacao: ${payload.code || "------"}\nMotivo: ${payload.context || "Verificacao de seguranca"}\nExpira em 10 minutos.`
+  };
+};
+
 const buildTemplate = (eventType, payload) => {
   switch (eventType) {
     case "REGISTER":
@@ -110,6 +127,8 @@ const buildTemplate = (eventType, payload) => {
       return buildProjectCreatedTemplate(payload);
     case "CREDITS_CHANGED":
       return buildCreditsChangedTemplate(payload);
+    case "SECURITY_CODE":
+      return buildSecurityCodeTemplate(payload);
     default:
       return {
         subject: "Notificacao do TCC Idea Builder",

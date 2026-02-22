@@ -5,6 +5,7 @@ const authRoutes = require("../modules/auth/auth.routes");
 const adminRoutes = require("../modules/admin/admin.routes");
 const projectsRoutes = require("../modules/projects/projects.routes");
 const usersRoutes = require("../modules/users/users.routes");
+const profileRoutes = require("../modules/profile/profile.routes");
 const auth = require("../middlewares/auth");
 const requireRole = require("../middlewares/requireRole");
 
@@ -22,6 +23,7 @@ router.get("/health", (_req, res) => {
 router.use("/auth", authRoutes);
 router.use("/projects", auth, projectsRoutes);
 router.use("/users", auth, usersRoutes);
+router.use("/users/profile", auth, profileRoutes);
 router.use("/admin", auth, requireRole("ADMIN"), adminRoutes);
 
 module.exports = router;

@@ -45,10 +45,30 @@ const revokeAllSessions = async (req, res, next) => {
   }
 };
 
+const forgotPasswordRequestCode = async (req, res, next) => {
+  try {
+    const result = await authService.forgotPasswordRequestCode(req.body.email);
+    return res.status(200).json(result);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const forgotPasswordConfirm = async (req, res, next) => {
+  try {
+    const result = await authService.forgotPasswordConfirm(req.body);
+    return res.status(200).json(result);
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   refresh,
   logout,
-  revokeAllSessions
+  revokeAllSessions,
+  forgotPasswordRequestCode,
+  forgotPasswordConfirm
 };

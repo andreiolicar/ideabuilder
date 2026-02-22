@@ -29,8 +29,44 @@ const generationRateLimit = rateLimit({
   }
 });
 
+const forgotPasswordRequestRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    code: "RATE_LIMITED",
+    message: "Muitas solicitacoes de recuperacao. Tente novamente mais tarde."
+  }
+});
+
+const forgotPasswordConfirmRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    code: "RATE_LIMITED",
+    message: "Muitas tentativas de validacao de codigo. Tente novamente mais tarde."
+  }
+});
+
+const profileSecurityRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    code: "RATE_LIMITED",
+    message: "Muitas tentativas de seguranca. Aguarde e tente novamente."
+  }
+});
+
 module.exports = {
   globalRateLimit,
   authRateLimit,
-  generationRateLimit
+  generationRateLimit,
+  forgotPasswordRequestRateLimit,
+  forgotPasswordConfirmRateLimit,
+  profileSecurityRateLimit
 };

@@ -87,3 +87,17 @@ export function SettingsIcon() {
     </IconBase>
   );
 }
+
+export function ProfileIcon() {
+  return (
+    <IconBase>
+      <circle cx="12" cy="8.5" r="3.2" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="M5.2 18.5C6 15.9 8.5 14.2 12 14.2C15.5 14.2 18 15.9 18.8 18.5"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </IconBase>
+  );
+}

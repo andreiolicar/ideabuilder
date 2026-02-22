@@ -23,7 +23,8 @@ module.exports = (sequelize, DataTypes) => {
           "REGISTER",
           "LOGIN",
           "PROJECT_CREATED",
-          "CREDITS_CHANGED"
+          "CREDITS_CHANGED",
+          "SECURITY_CODE"
         ),
         allowNull: false,
         field: "event_type"

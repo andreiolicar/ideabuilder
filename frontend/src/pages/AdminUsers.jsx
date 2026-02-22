@@ -13,6 +13,7 @@ import {
   DashboardIcon,
   LedgerIcon,
   LogoutIcon,
+  ProfileIcon,
   SettingsIcon,
   UsersIcon
 } from "../components/ui/SidebarIcons.jsx";
@@ -135,6 +136,7 @@ function AdminUsers() {
             key: "preferences",
             title: "Preferencias",
             items: [
+              { key: "profile", label: "Perfil", to: "/profile", active: location.pathname === "/profile", icon: <ProfileIcon /> },
               { key: "settings", label: "Configuracoes", to: "/settings", active: location.pathname === "/settings", icon: <SettingsIcon /> }
             ]
           }

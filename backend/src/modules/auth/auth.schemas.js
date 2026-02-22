@@ -25,9 +25,25 @@ const revokeAllSessionsSchema = {
   body: z.object({}).optional()
 };
 
+const forgotPasswordRequestSchema = {
+  body: z.object({
+    email: z.string().trim().email().max(255)
+  })
+};
+
+const forgotPasswordConfirmSchema = {
+  body: z.object({
+    email: z.string().trim().email().max(255),
+    code: z.string().trim().regex(/^\d{6}$/),
+    newPassword: z.string().min(8).max(128)
+  })
+};
+
 module.exports = {
   registerSchema,
   loginSchema,
   refreshSchema,
-  revokeAllSessionsSchema
+  revokeAllSessionsSchema,
+  forgotPasswordRequestSchema,
+  forgotPasswordConfirmSchema
 };

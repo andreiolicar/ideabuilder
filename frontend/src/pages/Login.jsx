@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../context/useAuth.js";
 import AuthIcon from "../components/ui/AuthIcon.jsx";
 import Button from "../components/ui/Button.jsx";
@@ -7,6 +7,7 @@ import Card from "../components/ui/Card.jsx";
 import Input from "../components/ui/Input.jsx";
 import Spinner from "../components/ui/Spinner.jsx";
 import useToast from "../context/useToast.js";
+import api from "../lib/api.js";
 
 const mapLoginErrorMessage = (error) => {
   const status = error?.response?.status;
@@ -34,12 +35,46 @@ const mapLoginErrorMessage = (error) => {
 function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const { addToast } = useToast();
-  const from = location.state?.from?.pathname || "/";
 
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotVisible, setForgotVisible] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotCooldown, setForgotCooldown] = useState(0);
+  const [forgotForm, setForgotForm] = useState({
+    email: "",
+    code: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+
+  useEffect(() => {
+    if (!forgotCooldown) {
+      return undefined;
+    }
+
+    const timer = window.setInterval(() => {
+      setForgotCooldown((current) => Math.max(current - 1, 0));
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [forgotCooldown]);
+
+  useEffect(() => {
+    if (forgotOpen) {
+      setForgotVisible(true);
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setForgotVisible(false);
+    }, 220);
+
+    return () => window.clearTimeout(timer);
+  }, [forgotOpen]);
 
   const handleChange = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -56,12 +91,114 @@ function Login() {
         message: "Bem-vindo ao TCC Idea Builder.",
         tone: "success"
       });
-      navigate(from, { replace: true });
+      navigate("/", { replace: true });
     } catch (submitError) {
       const message = mapLoginErrorMessage(submitError);
       addToast({ title: "Erro de login", message, tone: "error" });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updateForgot = (field) => (event) => {
+    setForgotForm((current) => ({ ...current, [field]: event.target.value }));
+  };
+
+  const handleForgotRequestCode = async (event) => {
+    event.preventDefault();
+
+    const email = forgotForm.email.trim();
+    if (!email) {
+      addToast({
+        title: "Validacao",
+        message: "Informe seu e-mail para receber o codigo.",
+        tone: "warning"
+      });
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const { data } = await api.post("/auth/forgot-password/request-code", { email });
+      addToast({
+        title: "Codigo enviado",
+        message:
+          data?.message || "Se o e-mail existir, enviaremos um codigo de redefinicao.",
+        tone: "success"
+      });
+      setForgotStep(2);
+      setForgotCooldown(60);
+    } catch (requestError) {
+      const message =
+        requestError?.response?.data?.message || "Nao foi possivel enviar o codigo.";
+      addToast({ title: "Erro", message, tone: "error" });
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleForgotConfirm = async (event) => {
+    event.preventDefault();
+
+    const email = forgotForm.email.trim();
+    const code = forgotForm.code.trim();
+
+    if (!email || !code || !forgotForm.newPassword || !forgotForm.confirmPassword) {
+      addToast({
+        title: "Validacao",
+        message: "Preencha todos os campos para redefinir a senha.",
+        tone: "warning"
+      });
+      return;
+    }
+
+    if (!/^\d{6}$/.test(code)) {
+      addToast({
+        title: "Validacao",
+        message: "O codigo deve conter 6 digitos.",
+        tone: "warning"
+      });
+      return;
+    }
+
+    if (forgotForm.newPassword !== forgotForm.confirmPassword) {
+      addToast({
+        title: "Validacao",
+        message: "A confirmacao da senha nao confere.",
+        tone: "warning"
+      });
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const { data } = await api.post("/auth/forgot-password/confirm", {
+        email,
+        code,
+        newPassword: forgotForm.newPassword
+      });
+
+      addToast({
+        title: "Senha redefinida",
+        message: data?.message || "Sua senha foi atualizada com sucesso.",
+        tone: "success"
+      });
+
+      setForgotOpen(false);
+      setForgotStep(1);
+      setForgotForm({
+        email: "",
+        code: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+      setForgotCooldown(0);
+    } catch (requestError) {
+      const message =
+        requestError?.response?.data?.message || "Nao foi possivel redefinir a senha.";
+      addToast({ title: "Erro", message, tone: "error" });
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -115,6 +252,108 @@ function Login() {
         </form>
 
         <div className="divider">OR</div>
+
+        <section className="auth-recovery">
+          <div className="auth-recovery-header" style={{ justifyContent: "center" }}>
+            <p className="body-sm" style={{ textAlign: "center" }}>
+              Esqueceu sua senha?{" "}
+              <button
+                type="button"
+                className="auth-inline-link"
+                onClick={() => {
+                  setForgotOpen((current) => {
+                    const next = !current;
+                    if (next) {
+                      setForgotVisible(true);
+                    }
+                    return next;
+                  });
+                  setForgotStep(1);
+                }}
+              >
+                {forgotOpen ? "Fechar" : "Redefinir agora"}
+              </button>
+            </p>
+          </div>
+          <div className={["auth-recovery-panel", forgotOpen ? "open" : ""].join(" ")}>
+            {forgotVisible ? (
+              forgotStep === 1 ? (
+                <form className="stack-md" onSubmit={handleForgotRequestCode}>
+                  <Input
+                    id="forgot-email"
+                    label="E-mail"
+                    type="email"
+                    value={forgotForm.email}
+                    onChange={updateForgot("email")}
+                    placeholder="voce@faculdade.com"
+                    required
+                  />
+                  <Button type="submit" variant="secondary" fullWidth disabled={forgotLoading || forgotCooldown > 0}>
+                    {forgotLoading ? (
+                      <>
+                        <Spinner />
+                        Enviando...
+                      </>
+                    ) : forgotCooldown > 0 ? (
+                      `Reenviar em ${forgotCooldown}s`
+                    ) : (
+                      "Enviar codigo"
+                    )}
+                  </Button>
+                </form>
+              ) : (
+                <form className="stack-md" onSubmit={handleForgotConfirm}>
+                  <Input
+                    id="forgot-code"
+                    label="Codigo OTP"
+                    value={forgotForm.code}
+                    onChange={updateForgot("code")}
+                    placeholder="000000"
+                    required
+                  />
+                  <Input
+                    id="forgot-new-password"
+                    label="Nova senha"
+                    type="password"
+                    value={forgotForm.newPassword}
+                    onChange={updateForgot("newPassword")}
+                    placeholder="********"
+                    required
+                  />
+                  <Input
+                    id="forgot-confirm-password"
+                    label="Confirmar nova senha"
+                    type="password"
+                    value={forgotForm.confirmPassword}
+                    onChange={updateForgot("confirmPassword")}
+                    placeholder="********"
+                    required
+                  />
+                  <div className="auth-recovery-actions">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setForgotStep(1)}
+                      disabled={forgotLoading}
+                    >
+                      Voltar
+                    </Button>
+                    <Button type="submit" variant="secondary" disabled={forgotLoading}>
+                      {forgotLoading ? (
+                        <>
+                          <Spinner />
+                          Confirmando...
+                        </>
+                      ) : (
+                        "Redefinir senha"
+                      )}
+                    </Button>
+                  </div>
+                </form>
+              )
+            ) : null}
+          </div>
+        </section>
 
         <p className="body-sm" style={{ textAlign: "center" }}>
           Nao tem conta?{" "}
