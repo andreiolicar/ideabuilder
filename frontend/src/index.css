@@ -115,13 +115,16 @@ select {
   font: inherit;
 }
 
-input:focus-visible,
-textarea:focus-visible,
 button:focus-visible,
-select:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
 }
 
 .page-shell {
@@ -218,7 +221,7 @@ select:focus-visible,
   border: 1px solid var(--border-default);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
-  box-shadow: var(--shadow-md);
+  box-shadow: none;
   transition: border-color var(--transition-base), background var(--transition-base);
 }
 
@@ -230,12 +233,12 @@ select:focus-visible,
 .card--elevated {
   background: var(--bg-elevated);
   border-color: var(--border-default);
-  box-shadow: var(--shadow-lg), 0 0 0 1px var(--border-subtle);
+  box-shadow: none;
 }
 
 .card--accent {
   border-color: var(--border-glow);
-  box-shadow: var(--shadow-md), var(--shadow-glow);
+  box-shadow: none;
 }
 
 .card--corners {
@@ -280,7 +283,12 @@ select:focus-visible,
   font-size: 14px;
   padding: 8px 12px;
   outline: none;
+  box-shadow: none;
   transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.input:not(.textarea) {
+  height: 38px;
 }
 
 .input::placeholder {
@@ -289,12 +297,19 @@ select:focus-visible,
 
 .input:hover {
   border-color: var(--border-strong);
-  background: rgba(255, 255, 255, 0.06);
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
 .input:focus {
   border-color: var(--accent-primary);
-  background: rgba(59, 130, 246, 0.05);
+  background-color: rgba(59, 130, 246, 0.05);
+  outline: none;
+  box-shadow: none;
+}
+
+.input:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 .input:disabled {
@@ -317,11 +332,20 @@ select:focus-visible,
 
 .select {
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   background-image: linear-gradient(45deg, transparent 50%, var(--text-secondary) 50%), linear-gradient(135deg, var(--text-secondary) 50%, transparent 50%);
   background-position: calc(100% - 18px) calc(50% - 2px), calc(100% - 12px) calc(50% - 2px);
   background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
+  background-color: rgba(255, 255, 255, 0.04);
   padding-right: 36px;
+  color: var(--text-primary);
+}
+
+.select option {
+  background: var(--bg-overlay);
+  color: var(--text-primary);
 }
 
 .form-group {
@@ -541,6 +565,21 @@ select:focus-visible,
   justify-content: center;
   z-index: 1000;
   padding: var(--space-4);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 180ms ease, visibility 180ms ease;
+}
+
+.modal-backdrop-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.modal-backdrop-closed {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .modal {
@@ -552,6 +591,7 @@ select:focus-visible,
   width: 100%;
   max-width: 560px;
   position: relative;
+  transition: opacity 180ms ease, transform 180ms ease;
 }
 
 .modal::before,
@@ -587,6 +627,26 @@ select:focus-visible,
 
 .project-form-span-2 {
   grid-column: span 2;
+}
+
+.project-right-stack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.project-right-stack .form-group {
+  margin-bottom: 0;
+}
+
+.project-description-field .form-group {
+  margin-bottom: 0;
+  height: 100%;
+}
+
+.project-description-input {
+  min-height: 108px;
+  height: 108px;
+  max-height: 108px;
 }
 
 .project-tags-box {
@@ -942,7 +1002,7 @@ select:focus-visible,
   font-weight: 500;
   color: var(--text-muted);
   cursor: pointer;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   text-decoration: none;
   transition: all var(--transition-fast);
@@ -1051,6 +1111,7 @@ select:focus-visible,
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   background: var(--bg-glass);
+  position: relative;
 }
 
 .user-profile-wrap {
@@ -1065,6 +1126,17 @@ select:focus-visible,
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
+  min-height: 24px;
+}
+
+.user-profile-badges .badge:first-child {
+  min-width: 110px;
+  justify-content: center;
+}
+
+.user-profile-badges .badge:last-child {
+  min-width: 74px;
+  justify-content: center;
 }
 
 .user-profile-avatar {
@@ -1130,6 +1202,23 @@ select:focus-visible,
   background: currentColor;
 }
 
+.user-profile-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 150px;
+  z-index: 20;
+  transform-origin: top right;
+}
+
+.dropdown-enter {
+  animation: dropdown-in 160ms ease forwards;
+}
+
+.dropdown-exit {
+  animation: dropdown-out 160ms ease forwards;
+}
+
 .content-grid {
   display: grid;
   gap: var(--space-4);
@@ -1157,6 +1246,10 @@ select:focus-visible,
   flex-wrap: wrap;
 }
 
+.admin-search-form .form-group {
+  margin-bottom: 0;
+}
+
 .admin-search-field {
   min-width: 260px;
   flex: 1;
@@ -1164,6 +1257,119 @@ select:focus-visible,
 
 .admin-search-button {
   min-width: 110px;
+  margin-bottom: 0;
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+}
+
+.filter-row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-row .form-group {
+  margin-bottom: 0;
+}
+
+.filter-field {
+  min-width: 260px;
+  flex: 1;
+}
+
+.filter-actions {
+  display: flex;
+  gap: var(--space-2);
+  align-self: flex-end;
+}
+
+.filter-actions .btn {
+  height: 38px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.admin-action-btn {
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
+  padding-top: 0;
+  padding-bottom: 0;
+  line-height: 1;
+  align-self: flex-end;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.settings-switch-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 38px;
+}
+
+.settings-switch-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-glass);
+  position: relative;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.settings-switch-row input[type="checkbox"]:hover {
+  border-color: var(--border-strong);
+}
+
+.settings-switch-row input[type="checkbox"]:checked {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.settings-switch-row input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.settings-switch-row input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.settings-security-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.settings-security-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .app-icon {
@@ -1222,8 +1428,14 @@ select:focus-visible,
   }
 }
 
-.modal-animate {
-  animation: scale-in 200ms ease forwards;
+.modal-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.modal-closed {
+  opacity: 0;
+  transform: translateY(8px);
 }
 
 @keyframes scale-in {
@@ -1235,6 +1447,28 @@ select:focus-visible,
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes dropdown-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dropdown-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
   }
 }
 
@@ -1345,6 +1579,15 @@ select:focus-visible,
 
   .project-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-security-row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .project-form-span-2 {

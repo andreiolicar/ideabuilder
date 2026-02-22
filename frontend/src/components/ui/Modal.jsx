@@ -60,24 +60,21 @@ function Modal({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open, onClose, closeOnEscape]);
 
-  if (!open) {
-    return null;
-  }
-
   return (
     <div
-      className="modal-backdrop"
+      className={["modal-backdrop", open ? "modal-backdrop-open" : "modal-backdrop-closed"].join(" ")}
       role="dialog"
       aria-modal="true"
+      aria-hidden={!open}
       aria-label={title}
     >
       <div
         className="absolute inset-0"
-        onClick={closeOnBackdrop ? onClose : undefined}
+        onClick={open && closeOnBackdrop ? onClose : undefined}
       />
       <div
         ref={panelRef}
-        className={["modal card--corners modal-animate", className].join(" ")}
+        className={["modal card--corners", open ? "modal-open" : "modal-closed", className].join(" ")}
       >
         {children}
       </div>

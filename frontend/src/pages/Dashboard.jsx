@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import CreateProjectModal from "../components/CreateProjectModal.jsx";
 import DashboardSidebar from "../components/DashboardSidebar.jsx";
 import ProjectCard from "../components/ProjectCard.jsx";
@@ -11,6 +12,7 @@ import {
   FolderIcon,
   LedgerIcon,
   LogoutIcon,
+  SettingsIcon,
   UsersIcon
 } from "../components/ui/SidebarIcons.jsx";
 import useAuth from "../context/useAuth.js";
@@ -26,6 +28,7 @@ const initialFilters = {
 };
 
 function Dashboard() {
+  const location = useLocation();
   const { user, logout } = useAuth();
   const { addToast } = useToast();
 
@@ -106,7 +109,14 @@ function Dashboard() {
                   ]
                 }
               ]
-            : [])
+            : []),
+          {
+            key: "preferences",
+            title: "Preferencias",
+            items: [
+              { key: "settings", label: "Configuracoes", to: "/settings", active: location.pathname === "/settings", icon: <SettingsIcon /> }
+            ]
+          }
         ]}
         footer={
           <div style={{ display: "grid", gap: "var(--space-2)" }}>

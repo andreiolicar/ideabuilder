@@ -205,9 +205,24 @@ const logout = async ({ refreshToken }) => {
   });
 };
 
+const revokeAllSessions = async (userId) => {
+  await RefreshToken.update(
+    { revokedAt: new Date() },
+    {
+      where: {
+        userId,
+        revokedAt: {
+          [Op.is]: null
+        }
+      }
+    }
+  );
+};
+
 module.exports = {
   register,
   login,
   refreshSession,
-  logout
+  logout,
+  revokeAllSessions
 };

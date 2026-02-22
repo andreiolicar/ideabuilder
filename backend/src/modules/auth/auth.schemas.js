@@ -21,8 +21,13 @@ const refreshSchema = {
   })
 };
 
+const revokeAllSessionsSchema = {
+  body: z.object({}).optional()
+};
+
 module.exports = {
   registerSchema,
   loginSchema,
-  refreshSchema
+  refreshSchema,
+  revokeAllSessionsSchema
 };

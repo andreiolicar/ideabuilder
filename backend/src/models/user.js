@@ -41,6 +41,7 @@ module.exports = (sequelize, DataTypes) => {
       as: "refreshTokens"
     });
     User.hasMany(models.CreditLedger, { foreignKey: "user_id", as: "ledger" });
+    User.hasOne(models.UserSetting, { foreignKey: "user_id", as: "settings" });
   };
 
   return User;

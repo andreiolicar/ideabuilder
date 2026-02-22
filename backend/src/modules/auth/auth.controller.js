@@ -36,9 +36,19 @@ const logout = async (req, res, next) => {
   }
 };
 
+const revokeAllSessions = async (req, res, next) => {
+  try {
+    await authService.revokeAllSessions(req.user.id);
+    return res.status(204).send();
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
   register,
   login,
   refresh,
-  logout
+  logout,
+  revokeAllSessions
 };

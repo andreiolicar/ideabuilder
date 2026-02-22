@@ -10,13 +10,44 @@ const tabs = [
   { key: "ROADMAP", label: "Roadmap" }
 ];
 
-function MarkdownViewer({ documents = [] }) {
+const normalizeGeneralHeading = (contentMd, projectTitle) => {
+  const source = String(contentMd || "");
+  if (!source.trim()) {
+    return source;
+  }
+
+  const lines = source.split("\n");
+  const projectHead = String(projectTitle || "").trim().toLowerCase();
+
+  const firstHeadingIndex = lines.findIndex((line) => line.trim().startsWith("#"));
+  if (firstHeadingIndex === -1) {
+    return source;
+  }
+
+  const headingText = lines[firstHeadingIndex].replace(/^#+\s*/, "").trim().toLowerCase();
+  const shouldReplace =
+    headingText.includes("projeto de tcc") ||
+    (projectHead && headingText.includes(projectHead));
+
+  if (!shouldReplace) {
+    return source;
+  }
+
+  lines[firstHeadingIndex] = "# Documento Geral do Projeto";
+  return lines.join("\n");
+};
+
+function MarkdownViewer({ documents = [], projectTitle = "" }) {
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState(tabs[0].key);
   const resolvedTab = documents.some((doc) => doc.type === activeTab)
     ? activeTab
     : documents[0]?.type || tabs[0].key;
   const activeDocument = documents.find((doc) => doc.type === resolvedTab);
+  const contentToRender =
+    resolvedTab === "GENERAL"
+      ? normalizeGeneralHeading(activeDocument?.contentMd, projectTitle)
+      : activeDocument?.contentMd;
 
   const copyMarkdown = async () => {
     if (!activeDocument?.contentMd) {
@@ -43,7 +74,7 @@ function MarkdownViewer({ documents = [] }) {
       <div className="card">
         <div className="markdown-content">
           <ReactMarkdown>
-            {activeDocument?.contentMd || "Documento indisponivel."}
+            {contentToRender || "Documento indisponivel."}
           </ReactMarkdown>
         </div>
       </div>

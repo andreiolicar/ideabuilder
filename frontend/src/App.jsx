@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Login from "./pages/Login.jsx";
 import Project from "./pages/Project.jsx";
 import Register from "./pages/Register.jsx";
+import Settings from "./pages/Settings.jsx";
 
 function App() {
   return (
@@ -26,6 +27,14 @@ function App() {
         element={
           <PrivateRoute>
             <Project />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <PrivateRoute>
+            <Settings />
           </PrivateRoute>
         }
       />

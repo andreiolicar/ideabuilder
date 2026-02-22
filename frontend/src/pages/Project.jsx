@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import DashboardSidebar from "../components/DashboardSidebar.jsx";
 import MarkdownViewer from "../components/MarkdownViewer.jsx";
 import Button from "../components/ui/Button.jsx";
@@ -11,6 +11,7 @@ import {
   DashboardIcon,
   LedgerIcon,
   LogoutIcon,
+  SettingsIcon,
   UsersIcon
 } from "../components/ui/SidebarIcons.jsx";
 import useAuth from "../context/useAuth.js";
@@ -27,6 +28,7 @@ function simplifyTitle(title) {
 
 function Project() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [project, setProject] = useState(null);
@@ -78,7 +80,14 @@ function Project() {
                   ]
                 }
               ]
-            : [])
+            : []),
+          {
+            key: "preferences",
+            title: "Preferencias",
+            items: [
+              { key: "settings", label: "Configuracoes", to: "/settings", active: location.pathname === "/settings", icon: <SettingsIcon /> }
+            ]
+          }
         ]}
         footer={
           <div style={{ display: "grid", gap: "var(--space-2)" }}>
@@ -145,7 +154,6 @@ function Project() {
                   <h2 className="heading-md">{simplifyTitle(project?.title)}</h2>
                   <p className="body-sm">{project?.category || "Sem categoria"}</p>
                 </div>
-                <Chip tone={project?.status === "READY" ? "success" : "warning"}>{project?.status}</Chip>
               </div>
               <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
                 {(project?.tags || []).map((tag) => (
@@ -154,7 +162,7 @@ function Project() {
               </div>
             </Card>
 
-            <MarkdownViewer documents={project?.documents || []} />
+            <MarkdownViewer documents={project?.documents || []} projectTitle={project?.title || ""} />
           </>
         )}
       </main>

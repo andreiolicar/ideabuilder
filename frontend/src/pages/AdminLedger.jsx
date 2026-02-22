@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import DashboardSidebar from "../components/DashboardSidebar.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
@@ -10,6 +11,7 @@ import {
   DashboardIcon,
   LedgerIcon,
   LogoutIcon,
+  SettingsIcon,
   UsersIcon
 } from "../components/ui/SidebarIcons.jsx";
 import useAuth from "../context/useAuth.js";
@@ -17,6 +19,7 @@ import useToast from "../context/useToast.js";
 import api from "../lib/api.js";
 
 function AdminLedger() {
+  const location = useLocation();
   const { user, logout } = useAuth();
   const { addToast } = useToast();
   const [users, setUsers] = useState([]);
@@ -93,6 +96,13 @@ function AdminLedger() {
               { key: "users", label: "Usuarios", to: "/admin/users", icon: <UsersIcon /> },
               { key: "ledger", label: "Ledger de creditos", to: "/admin/ledger", active: true, icon: <LedgerIcon /> }
             ]
+          },
+          {
+            key: "preferences",
+            title: "Preferencias",
+            items: [
+              { key: "settings", label: "Configuracoes", to: "/settings", active: location.pathname === "/settings", icon: <SettingsIcon /> }
+            ]
           }
         ]}
         footer={
@@ -115,8 +125,8 @@ function AdminLedger() {
         {error ? <p className="form-error">{error}</p> : null}
 
         <Card className="stack-md animate-in">
-          <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap", alignItems: "flex-end" }}>
-            <div style={{ minWidth: "260px", flex: 1 }}>
+          <div className="filter-row">
+            <div className="filter-field">
               <Input
                 id="ledger-user-id"
                 label="Filtro por userId"
@@ -125,12 +135,14 @@ function AdminLedger() {
                 placeholder="UUID do usuario"
               />
             </div>
-            <Button variant="secondary" onClick={() => applyLedgerFilter(ledgerUserId)}>
-              Aplicar
-            </Button>
-            <Button variant="ghost" onClick={() => applyLedgerFilter("")}>
-              Limpar
-            </Button>
+            <div className="filter-actions">
+              <Button className="admin-action-btn" variant="secondary" onClick={() => applyLedgerFilter(ledgerUserId)}>
+                Aplicar
+              </Button>
+              <Button className="admin-action-btn" variant="ghost" onClick={() => applyLedgerFilter("")}>
+                Limpar
+              </Button>
+            </div>
           </div>
 
           <div className="table-wrapper">

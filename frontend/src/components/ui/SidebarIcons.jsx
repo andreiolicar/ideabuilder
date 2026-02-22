@@ -73,3 +73,17 @@ export function LogoutIcon() {
     </IconBase>
   );
 }
+
+export function SettingsIcon() {
+  return (
+    <IconBase>
+      <path
+        d="M10.3 3.8H13.7L14.3 5.8C14.8 5.95 15.3 6.15 15.7 6.4L17.7 5.6L20.1 8L19.3 10C19.55 10.45 19.75 10.9 19.9 11.4L21.9 12V15.4L19.9 16C19.75 16.5 19.55 16.95 19.3 17.4L20.1 19.4L17.7 21.8L15.7 21C15.25 21.25 14.8 21.45 14.3 21.6L13.7 23.6H10.3L9.7 21.6C9.2 21.45 8.75 21.25 8.3 21L6.3 21.8L3.9 19.4L4.7 17.4C4.45 16.95 4.25 16.5 4.1 16L2.1 15.4V12L4.1 11.4C4.25 10.9 4.45 10.45 4.7 10L3.9 8L6.3 5.6L8.3 6.4C8.75 6.15 9.2 5.95 9.7 5.8L10.3 3.8Z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="13.7" r="2.6" stroke="currentColor" strokeWidth="1.7" />
+    </IconBase>
+  );
+}

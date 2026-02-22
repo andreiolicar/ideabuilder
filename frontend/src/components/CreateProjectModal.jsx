@@ -13,8 +13,10 @@ import Textarea from "./ui/Textarea.jsx";
 const initialState = {
   category: "",
   tags: [],
+  areas: [],
   description: "",
   maxCost: "",
+  targetAudience: "",
   preferences: "",
   constraints: ""
 };
@@ -26,17 +28,34 @@ const tagOptions = [
   "Mobile",
   "Dados",
   "Seguranca",
+  "Cloud"
+];
+
+const areaOptions = [
   "Educacao",
-  "Saude"
+  "Saude",
+  "Sustentabilidade",
+  "Mobilidade urbana",
+  "Acessibilidade",
+  "Seguranca publica"
 ];
 
 function toPayload(form) {
+  const mergedTags = Array.from(new Set([...form.tags, ...form.areas]));
+  const preferencesParts = [];
+  if (form.preferences.trim()) {
+    preferencesParts.push(form.preferences.trim());
+  }
+  if (form.targetAudience.trim()) {
+    preferencesParts.push(`Publico-alvo: ${form.targetAudience.trim()}`);
+  }
+
   return {
     category: form.category.trim() || undefined,
-    tags: form.tags,
+    tags: mergedTags,
     description: form.description.trim(),
     maxCost: Number(form.maxCost || 0),
-    preferences: form.preferences.trim() || undefined,
+    preferences: preferencesParts.join("\n") || undefined,
     constraints: form.constraints.trim() || undefined
   };
 }
@@ -75,6 +94,18 @@ function CreateProjectModal({ open, onClose }) {
         tags: exists
           ? current.tags.filter((item) => item !== tag)
           : [...current.tags, tag]
+      };
+    });
+  };
+
+  const toggleArea = (area) => {
+    setForm((current) => {
+      const exists = current.areas.includes(area);
+      return {
+        ...current,
+        areas: exists
+          ? current.areas.filter((item) => item !== area)
+          : [...current.areas, area]
       };
     });
   };
@@ -133,7 +164,6 @@ function CreateProjectModal({ open, onClose }) {
           <div className="stack-sm">
             <h2 className="heading-sm">Criar projeto</h2>
             <p className="body-sm">Preencha os campos para gerar os 3 documentos automaticamente.</p>
-            <p className="form-hint">O titulo final sera sugerido automaticamente pela IA.</p>
             <Chip tone="warning">Esta acao vai consumir 1 credito.</Chip>
           </div>
 
@@ -173,27 +203,60 @@ function CreateProjectModal({ open, onClose }) {
                   );
                 })}
               </div>
-              <p className="form-hint">Selecione uma ou mais tags.</p>
             </div>
 
-            <Textarea
-              id="description"
-              label="Descricao"
-              rows={4}
-              value={form.description}
-              onChange={handleChange("description")}
-              placeholder="Descreva claramente o problema e o objetivo do projeto."
-            />
+            <div className="stack-sm">
+              <p className="label" style={{ marginBottom: 0 }}>
+                Areas de atuacao
+              </p>
+              <div className="project-tags-box">
+                {areaOptions.map((area) => {
+                  const selected = form.areas.includes(area);
+                  return (
+                    <button
+                      key={area}
+                      type="button"
+                      onClick={() => toggleArea(area)}
+                      style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer" }}
+                    >
+                      <Chip tone={selected ? "info" : "default"}>{area}</Chip>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-            <Input
-              id="maxCost"
-              type="number"
-              min="0"
-              label="Custo maximo"
-              value={form.maxCost}
-              onChange={handleChange("maxCost")}
-              placeholder="0"
-            />
+            <div className="project-description-field">
+              <Textarea
+                id="description"
+                label="Descricao"
+                rows={4}
+                className="project-description-input"
+                value={form.description}
+                onChange={handleChange("description")}
+                placeholder="Descreva claramente o problema e o objetivo do projeto."
+              />
+            </div>
+
+            <div className="project-right-stack">
+              <Input
+                id="maxCost"
+                type="number"
+                min="0"
+                label="Custo maximo"
+                value={form.maxCost}
+                onChange={handleChange("maxCost")}
+                placeholder="0"
+              />
+
+              <Input
+                id="targetAudience"
+                label="Publico-alvo (opcional)"
+                value={form.targetAudience}
+                onChange={handleChange("targetAudience")}
+                placeholder="Ex.: pessoas com deficiencia visual"
+              />
+            </div>
 
             <div className="project-form-span-2">
               <Textarea

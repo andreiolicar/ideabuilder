@@ -8,6 +8,29 @@ import Input from "../components/ui/Input.jsx";
 import Spinner from "../components/ui/Spinner.jsx";
 import useToast from "../context/useToast.js";
 
+const mapRegisterErrorMessage = (error) => {
+  const status = error?.response?.status;
+  const apiMessage = String(error?.response?.data?.message || "").toLowerCase();
+
+  if (status === 409 || apiMessage.includes("email")) {
+    return "Este e-mail já está em uso. Tente outro e-mail para continuar.";
+  }
+
+  if (status === 400) {
+    return "Dados inválidos no cadastro. Revise os campos e tente novamente.";
+  }
+
+  if (status === 429) {
+    return "Muitas tentativas de cadastro. Aguarde alguns instantes e tente novamente.";
+  }
+
+  if (status >= 500) {
+    return "Não foi possível concluir o cadastro agora. Tente novamente em instantes.";
+  }
+
+  return "Não foi possível criar sua conta. Revise os dados e tente novamente.";
+};
+
 function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -33,7 +56,7 @@ function Register() {
       });
       navigate("/", { replace: true });
     } catch (submitError) {
-      const message = submitError?.response?.data?.message || "Falha ao cadastrar.";
+      const message = mapRegisterErrorMessage(submitError);
       addToast({ title: "Erro de cadastro", message, tone: "error" });
     } finally {
       setLoading(false);

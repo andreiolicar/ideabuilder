@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import DashboardSidebar from "../components/DashboardSidebar.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
@@ -12,6 +13,7 @@ import {
   DashboardIcon,
   LedgerIcon,
   LogoutIcon,
+  SettingsIcon,
   UsersIcon
 } from "../components/ui/SidebarIcons.jsx";
 import useAuth from "../context/useAuth.js";
@@ -19,6 +21,7 @@ import useToast from "../context/useToast.js";
 import api from "../lib/api.js";
 
 function AdminUsers() {
+  const location = useLocation();
   const { user, logout } = useAuth();
   const { addToast } = useToast();
   const [users, setUsers] = useState([]);
@@ -127,6 +130,13 @@ function AdminUsers() {
               { key: "users", label: "Usuarios", to: "/admin/users", active: true, icon: <UsersIcon /> },
               { key: "ledger", label: "Ledger de creditos", to: "/admin/ledger", icon: <LedgerIcon /> }
             ]
+          },
+          {
+            key: "preferences",
+            title: "Preferencias",
+            items: [
+              { key: "settings", label: "Configuracoes", to: "/settings", active: location.pathname === "/settings", icon: <SettingsIcon /> }
+            ]
           }
         ]}
         footer={
@@ -159,7 +169,7 @@ function AdminUsers() {
                 placeholder="Nome ou e-mail"
               />
             </div>
-            <Button type="submit" className="admin-search-button">
+            <Button type="submit" variant="secondary" className="admin-search-button admin-action-btn">
               Buscar
             </Button>
           </form>

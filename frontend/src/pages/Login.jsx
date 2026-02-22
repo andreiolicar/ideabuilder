@@ -8,6 +8,29 @@ import Input from "../components/ui/Input.jsx";
 import Spinner from "../components/ui/Spinner.jsx";
 import useToast from "../context/useToast.js";
 
+const mapLoginErrorMessage = (error) => {
+  const status = error?.response?.status;
+  const apiMessage = String(error?.response?.data?.message || "").toLowerCase();
+
+  if (status === 401) {
+    return "E-mail ou senha incorretos. Verifique seus dados e tente novamente.";
+  }
+
+  if (status === 429) {
+    return "Muitas tentativas de login. Aguarde alguns instantes e tente novamente.";
+  }
+
+  if (status >= 500) {
+    return "Não foi possível concluir o login agora. Tente novamente em instantes.";
+  }
+
+  if (apiMessage.includes("network") || apiMessage.includes("fetch")) {
+    return "Falha de conexão com o servidor. Verifique sua internet e tente novamente.";
+  }
+
+  return "Não foi possível realizar login. Revise os dados e tente novamente.";
+};
+
 function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -35,7 +58,7 @@ function Login() {
       });
       navigate(from, { replace: true });
     } catch (submitError) {
-      const message = submitError?.response?.data?.message || "Falha ao autenticar.";
+      const message = mapLoginErrorMessage(submitError);
       addToast({ title: "Erro de login", message, tone: "error" });
     } finally {
       setLoading(false);

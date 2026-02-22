@@ -12,12 +12,6 @@ function simplifyTitle(title) {
 }
 
 function ProjectCard({ project }) {
-  const statusTone = {
-    READY: "success",
-    GENERATING: "warning",
-    FAILED: "error"
-  }[project.status] || "default";
-
   return (
     <Link to={`/projects/${project.id}`} className="block">
       <Card className="h-full animate-in" style={{ transition: "transform var(--transition-fast)" }}>
@@ -26,7 +20,6 @@ function ProjectCard({ project }) {
             <h3 className="heading-sm">{simplifyTitle(project.title)}</h3>
             <p className="body-sm">{project.category || "Sem categoria"}</p>
           </div>
-          <Chip tone={statusTone}>{project.status}</Chip>
         </div>
 
         <div style={{ marginTop: "var(--space-4)", display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>

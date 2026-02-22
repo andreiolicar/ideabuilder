@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import UserProfile from "./UserProfile.jsx";
 
+const creditsCache = new Map();
+
 function renderItem(item) {
   const content = (
     <>
@@ -39,9 +41,16 @@ function DashboardSidebar({
   sections = [],
   footer
 }) {
+  const userKey = user?.id || "anonymous";
+  const hasRealCredits = credits !== undefined && credits !== null && credits !== "--";
+  if (hasRealCredits) {
+    creditsCache.set(userKey, credits);
+  }
+  const resolvedCredits = hasRealCredits ? credits : (creditsCache.get(userKey) ?? "--");
+
   return (
     <aside className="sidebar">
-      <UserProfile user={user} credits={credits} />
+      <UserProfile user={user} credits={resolvedCredits} />
 
       {sections.map((section) => (
         <div key={section.title || section.key} className="sidebar-section">
