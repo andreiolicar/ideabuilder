@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../context/useAuth.js";
+import AuthIcon from "../components/ui/AuthIcon.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
 import Input from "../components/ui/Input.jsx";
+import Spinner from "../components/ui/Spinner.jsx";
+import useToast from "../context/useToast.js";
 
 function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleChange = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -20,30 +23,42 @@ function Register() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);
-    setError("");
 
     try {
       await register(form);
+      addToast({
+        title: "Conta criada",
+        message: "Cadastro realizado com sucesso.",
+        tone: "success"
+      });
       navigate("/", { replace: true });
     } catch (submitError) {
-      setError(submitError?.response?.data?.message || "Falha ao cadastrar.");
+      const message = submitError?.response?.data?.message || "Falha ao cadastrar.";
+      addToast({ title: "Erro de cadastro", message, tone: "error" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="app-shell flex min-h-screen items-center justify-center">
-      <Card className="w-full max-w-md p-8">
-        <div className="mb-6 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
-            Criar Conta
+    <main className="auth-shell">
+      <Card elevated corners className="w-full max-w-[420px] animate-in">
+        <div className="flex-center" style={{ marginBottom: "var(--space-5)" }}>
+          <div className="app-icon app-icon--lg">
+            <AuthIcon />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "var(--space-6)" }}>
+          <h1 className="heading-sm" style={{ textAlign: "center", marginBottom: "var(--space-2)" }}>
+            Criar conta
           </h1>
-          <p className="text-sm text-zinc-500">
+          <p className="body-sm" style={{ textAlign: "center" }}>
             Comece seu planejamento de TCC com estrutura padronizada.
           </p>
         </div>
-        <form className="space-y-4" onSubmit={handleSubmit}>
+
+        <form className="stack-md" onSubmit={handleSubmit}>
           <Input
             id="register-name"
             label="Nome"
@@ -71,14 +86,30 @@ function Register() {
             placeholder="********"
             required
           />
-          {error ? <p className="text-sm text-rose-600">{error}</p> : null}
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Criando..." : "Criar conta"}
+          <Button type="submit" fullWidth disabled={loading} loading={loading}>
+            {loading ? (
+              <>
+                <Spinner />
+                Criando...
+              </>
+            ) : (
+              "Criar conta"
+            )}
           </Button>
         </form>
-        <p className="mt-6 text-sm text-zinc-500">
+
+        <div className="divider">OR</div>
+
+        <p className="body-sm" style={{ textAlign: "center" }}>
           Ja possui conta?{" "}
-          <Link className="font-medium text-teal-700 hover:text-teal-800" to="/login">
+          <Link
+            to="/login"
+            style={{
+              color: "var(--accent-primary)",
+              fontWeight: 500,
+              transition: "color var(--transition-fast)"
+            }}
+          >
             Entrar
           </Link>
         </p>

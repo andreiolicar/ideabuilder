@@ -13,6 +13,17 @@ const sortMap = {
 const ISOLATION_LEVELS = Transaction.ISOLATION_LEVELS;
 const PLACEHOLDER_TITLE = "Projeto em geracao";
 
+const sanitizeGeneratedTitle = (title) => {
+  const normalized = String(title || "").trim();
+  if (!normalized) {
+    return "";
+  }
+
+  // Keep only the core title and drop long subtitle fragments after colon.
+  const [head] = normalized.split(":");
+  return head.trim();
+};
+
 const runWithStrongIsolation = async (work) => {
   try {
     return await sequelize.transaction(
@@ -235,7 +246,7 @@ const generateProject = async (userId, payload, idempotencyKey) => {
 
     const generated = await geminiService.generateProjectDocs(payload);
     const finalTitle =
-      payload.title?.trim() || generated.suggested_title?.trim() || PLACEHOLDER_TITLE;
+      sanitizeGeneratedTitle(generated.suggested_title) || PLACEHOLDER_TITLE;
 
     await runWithStrongIsolation(async (transaction) => {
       const project = await Project.findOne({

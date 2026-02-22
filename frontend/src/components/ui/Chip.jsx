@@ -1,13 +1,17 @@
 function Chip({ children, tone = "default", className = "" }) {
   const tones = {
-    default: "border-zinc-200/80 bg-zinc-50 text-zinc-600",
-    accent: "border-teal-200/80 bg-teal-50 text-teal-700"
+    default: "badge--default",
+    accent: "badge--accent",
+    success: "badge--success",
+    warning: "badge--warning",
+    error: "badge--error",
+    info: "badge--info"
   };
 
   return (
     <span
       className={[
-        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
+        "badge",
         tones[tone] || tones.default,
         className
       ].join(" ")}

@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import Admin from "./pages/Admin.jsx";
+import AdminLedger from "./pages/AdminLedger.jsx";
+import AdminUsers from "./pages/AdminUsers.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Login from "./pages/Login.jsx";
 import Project from "./pages/Project.jsx";
@@ -32,6 +34,22 @@ function App() {
         element={
           <PrivateRoute role="ADMIN">
             <Admin />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <PrivateRoute role="ADMIN">
+            <AdminUsers />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/admin/ledger"
+        element={
+          <PrivateRoute role="ADMIN">
+            <AdminLedger />
           </PrivateRoute>
         }
       />

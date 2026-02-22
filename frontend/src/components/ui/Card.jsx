@@ -1,8 +1,17 @@
-function Card({ className = "", children }) {
+function Card({
+  className = "",
+  elevated = false,
+  accent = false,
+  corners = false,
+  children
+}) {
   return (
     <div
       className={[
-        "rounded-2xl border border-zinc-200/80 bg-white/90 p-5 shadow-sm backdrop-blur",
+        "card",
+        elevated ? "card--elevated" : "",
+        accent ? "card--accent" : "",
+        corners ? "card--corners" : "",
         className
       ].join(" ")}
     >

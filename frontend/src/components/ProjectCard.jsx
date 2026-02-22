@@ -2,22 +2,34 @@ import { Link } from "react-router-dom";
 import Card from "./ui/Card.jsx";
 import Chip from "./ui/Chip.jsx";
 
+function simplifyTitle(title) {
+  const normalized = String(title || "").trim();
+  if (!normalized) {
+    return "Projeto sem titulo";
+  }
+
+  return normalized.split(":")[0].trim();
+}
+
 function ProjectCard({ project }) {
+  const statusTone = {
+    READY: "success",
+    GENERATING: "warning",
+    FAILED: "error"
+  }[project.status] || "default";
+
   return (
     <Link to={`/projects/${project.id}`} className="block">
-      <Card className="h-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-2">
-            <h3 className="text-base font-semibold text-zinc-900">{project.title}</h3>
-            <p className="text-sm text-zinc-500">
-              {project.category || "Sem categoria"}
-            </p>
+      <Card className="h-full animate-in" style={{ transition: "transform var(--transition-fast)" }}>
+        <div className="flex-between" style={{ gap: "var(--space-4)", alignItems: "flex-start" }}>
+          <div className="stack-sm">
+            <h3 className="heading-sm">{simplifyTitle(project.title)}</h3>
+            <p className="body-sm">{project.category || "Sem categoria"}</p>
           </div>
-          <Chip tone={project.status === "READY" ? "accent" : "default"}>
-            {project.status}
-          </Chip>
+          <Chip tone={statusTone}>{project.status}</Chip>
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
+
+        <div style={{ marginTop: "var(--space-4)", display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
           {(project.tags || []).slice(0, 4).map((tag) => (
             <Chip key={tag}>{tag}</Chip>
           ))}

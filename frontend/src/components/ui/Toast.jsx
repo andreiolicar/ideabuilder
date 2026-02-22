@@ -1,17 +1,32 @@
-function Toast({ message, visible }) {
+function Toast({ title = "Aviso", message, tone = "info", closing = false, onClose }) {
+  const toneClass = {
+    success: "toast--success",
+    error: "toast--error",
+    warning: "toast--warning",
+    info: "toast--info"
+  }[tone] || "toast--info";
+
   return (
     <div
       className={[
-        "fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-2xl border border-zinc-200/80",
-        "bg-white/95 px-4 py-2 text-sm text-zinc-700 shadow-md backdrop-blur transition-all duration-200",
-        visible
-          ? "translate-y-0 opacity-100"
-          : "pointer-events-none translate-y-3 opacity-0"
+        "toast",
+        toneClass,
+        closing ? "toast-exit" : "toast-enter"
       ].join(" ")}
       role="status"
-      aria-live="polite"
     >
-      {message}
+      <button
+        type="button"
+        className="toast-close"
+        aria-label="Fechar notificacao"
+        onClick={onClose}
+      >
+        x
+      </button>
+      <div>
+        <div className="toast-title">{title}</div>
+        <div className="toast-message">{message}</div>
+      </div>
     </div>
   );
 }
