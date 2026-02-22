@@ -32,7 +32,12 @@ const runWithStrongIsolation = async (work) => {
 };
 
 const listProjects = async (userId, query) => {
-  const where = { userId };
+  const where = {
+    userId,
+    status: {
+      [Op.ne]: "FAILED"
+    }
+  };
 
   if (query.search) {
     where.title = { [Op.iLike]: `%${query.search}%` };
@@ -56,6 +61,7 @@ const listProjects = async (userId, query) => {
     limit: PAGE_SIZE,
     offset
   });
+  const balance = await creditsService.getBalance(userId);
 
   return {
     items: rows,
@@ -63,7 +69,8 @@ const listProjects = async (userId, query) => {
       page,
       pageSize: PAGE_SIZE,
       totalItems: count,
-      totalPages: Math.max(1, Math.ceil(count / PAGE_SIZE))
+      totalPages: Math.max(1, Math.ceil(count / PAGE_SIZE)),
+      balance
     }
   };
 };
@@ -306,9 +313,25 @@ const generateProject = async (userId, payload, idempotencyKey) => {
   }
 };
 
+const deleteProject = async (userId, projectId) => {
+  const project = await Project.findOne({
+    where: {
+      id: projectId,
+      userId
+    }
+  });
+
+  if (!project) {
+    throw httpError(404, "Project not found");
+  }
+
+  await project.destroy();
+};
+
 module.exports = {
   listProjects,
   getProjectById,
   updateProject,
-  generateProject
+  generateProject,
+  deleteProject
 };

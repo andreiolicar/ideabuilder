@@ -1,176 +1,291 @@
-# 🎓 TCC Idea Builder
+# TCC Idea Builder
 
-TCC Idea Builder é um software web que auxilia estudantes na **criação, estruturação e organização de ideias para TCC** (Trabalho de Conclusão de Curso), gerando automaticamente documentações padronizadas com apoio de Inteligência Artificial.
+TCC Idea Builder e um software web que auxilia estudantes na criacao, estruturacao e organizacao de ideias para TCC (Trabalho de Conclusao de Curso), gerando automaticamente documentacoes padronizadas com apoio de Inteligencia Artificial.
 
-O objetivo é reduzir a dificuldade inicial de definir um tema, um escopo e um plano de desenvolvimento viável, além de oferecer uma organização clara dos projetos ao longo do tempo.
-
----
-
-## 💡 A dor que originou o projeto
-
-Durante cursos técnicos e tecnólogos, é comum que estudantes enfrentem dificuldades como:
-
-- Não saber por onde começar um TCC  
-- Ter várias ideias soltas, sem estrutura  
-- Falta de padronização entre propostas de diferentes integrantes  
-- Dificuldade em transformar uma ideia em um plano executável  
-
-Normalmente, essas definições consomem semanas e geram retrabalho.
-
-O **TCC Idea Builder** surge para resolver esse problema oferecendo um processo guiado, rápido e padronizado para transformar uma ideia em documentação clara e organizada.
+O objetivo e reduzir a dificuldade inicial de definir um tema, um escopo e um plano de desenvolvimento viavel, alem de oferecer uma organizacao clara dos projetos ao longo do tempo.
 
 ---
 
-## 🚀 Como funciona
+## A dor que originou o projeto
 
-1. O usuário cria uma conta e acessa a área restrita  
-2. Clica em **Criar Projeto**  
-3. Preenche um breve formulário com:
-   - Tipo de projeto (ex.: IA, IoT, Web, Mobile etc)
-   - Descrição da ideia
-   - Restrições (custo, tecnologias desejadas, limitações, etc)
+Durante cursos tecnicos e tecnologos, e comum que estudantes enfrentem dificuldades como:
 
-4. O sistema utiliza Inteligência Artificial para gerar automaticamente:
+- Nao saber por onde comecar um TCC
+- Ter varias ideias soltas, sem estrutura
+- Falta de padronizacao entre propostas de diferentes integrantes
+- Dificuldade em transformar uma ideia em um plano executavel
 
-- 📄 Documento Geral do Projeto  
-- ⚙️ Documento de Especificações Técnicas  
-- 🗺️ Roadmap de Desenvolvimento (planejamento em até 2 anos)
+Normalmente, essas definicoes consomem semanas e geram retrabalho.
 
-5. O projeto é salvo como uma **pasta/card**, contendo todas as documentações organizadas.
-
-Cada geração consome 1 crédito do usuário.
+O TCC Idea Builder surge para resolver esse problema oferecendo um processo guiado, rapido e padronizado para transformar uma ideia em documentacao clara e organizada.
 
 ---
 
-## 🗂 Estrutura de organização
+## Como funciona
+
+1. O usuario cria uma conta e acessa a area restrita.
+2. Clica em Criar Projeto.
+3. Preenche um formulario breve com:
+   - tipo/categoria
+   - descricao da ideia
+   - tags
+   - custo maximo
+   - preferencias e restricoes
+4. O sistema usa IA para gerar automaticamente:
+   - Documento Geral
+   - Documento de Especificacoes Tecnicas
+   - Roadmap de Desenvolvimento (ate 2 anos)
+5. O projeto e salvo como pasta/card com as documentacoes organizadas.
+
+Cada geracao consome 1 credito do usuario.
+
+---
+
+## Estrutura de organizacao
 
 - Projetos organizados em cards (pastas)
 - Busca por nome
 - Filtros por categoria e tags
 - Cada projeto possui:
   - Geral
-  - Especificações Técnicas
+  - Especificacoes Tecnicas
   - Roadmap
 
+Observacao:
+- Projetos com status `FAILED` nao sao exibidos na lista de cards do dashboard.
+
 ---
 
-## 🔐 Sistema de créditos
+## Sistema de creditos
 
-- Cada usuário possui um saldo de créditos  
-- Cada geração de projeto consome 1 crédito  
+- Cada usuario possui um saldo de creditos
+- Cada geracao de projeto consome 1 credito
 - Administrador via backoffice pode:
-  - Adicionar créditos  
-  - Remover créditos  
-  - Visualizar histórico de consumo  
+  - adicionar creditos
+  - remover creditos
+  - visualizar historico de consumo
 
 ---
 
-## 🛠 Tecnologias
+## Tecnologias
 
 ### Backend
-- Node.js  
-- Express  
-- PostgreSQL  
-- Sequelize  
-- JWT (Access Token + Refresh Token)  
-- Bcrypt  
+
+- Node.js
+- Express
+- PostgreSQL
+- Sequelize
+- JWT (Access Token + Refresh Token)
+- bcrypt
 
 ### Frontend
-- React  
-- Tailwind CSS  
-- React Router  
-- Axios  
+
+- React (Vite)
+- Tailwind CSS
+- React Router
+- Axios
 
 ### Infraestrutura
-- Deploy no Render  
+
+- Deploy no Render
 
 ---
 
-## 🎨 Interface
+## Interface
 
-A interface segue um padrão **minimalista e inspirada em produtos da Apple**, priorizando:
+A interface segue um padrao minimalista inspirado em produtos da Apple, priorizando:
 
-- Simplicidade  
-- Espaçamento adequado  
-- Tipografia clara  
-- Foco no conteúdo  
-
----
-
-## 📌 Objetivo acadêmico
-
-Este projeto está sendo desenvolvido para auxiliar estudantes que buscam ideias para o Trabalho de Conclusão de Curso (TCC) nos cursos de técnico em Desenvolvimento de Sistemas e tecnólogo em Análise e Desenvolvimento de Sistemas.
+- simplicidade
+- espaco em branco
+- tipografia clara
+- foco no conteudo
 
 ---
 
-## 📈 Possíveis evoluções futuras
+## Objetivo academico
 
-- Templates específicos por área (Saúde, Educação, Indústria, etc)  
-- Exportação de projetos em ZIP ou PDF  
-- Compartilhamento de projetos  
-- Colaboração em equipe  
-- Planos pagos  
+Este projeto esta sendo desenvolvido para auxiliar estudantes que buscam ideias para TCC em cursos tecnicos de Desenvolvimento de Sistemas e tecnologos de Analise e Desenvolvimento de Sistemas.
 
 ---
 
-## ▶️ Status do projeto
+## Possiveis evolucoes futuras
 
-🚧 Em desenvolvimento (MVP)
+- Templates especificos por area (Saude, Educacao, Industria, etc)
+- Exportacao de projetos em ZIP ou PDF
+- Compartilhamento de projetos
+- Colaboracao em equipe
+- Planos pagos
+
 ---
 
-## Backend Setup (MVP)
+## Status do projeto
 
-1. Entre na pasta do backend:
-   - `cd backend`
-2. Instale as dependencias:
-   - `npm install`
-3. Configure variaveis de ambiente:
-   - copie `backend/.env.example` para `backend/.env`
-   - ajuste `DATABASE_URL`, `JWT_*`, `GEMINI_API_KEY`, `CORS_ORIGIN`
-4. Rode as migrations:
-   - `npm run db:migrate`
-5. Inicie a API:
-   - desenvolvimento: `npm run dev`
-   - producao: `npm run start`
+Em desenvolvimento (MVP)
 
-Base URL local: `http://localhost:4000/api`
+---
+
+## Setup local
+
+1. Configure variaveis de ambiente:
+   - `backend/.env` (base em `backend/.env.example`)
+   - `frontend/.env` (base em `frontend/.env.example`)
+2. Instale dependencias:
+   - `npm run install:all`
+3. Rode migrations/seeders:
+   - `npm run db:setup`
+4. Suba backend + frontend:
+   - `npm run dev`
+
+Base URL local da API: `http://localhost:4000/api`
+
+---
+
+## Variaveis de ambiente
+
+### Backend (`backend/.env`)
+
+- `NODE_ENV`
+- `PORT`
+- `DATABASE_URL`
+- `DATABASE_URL_TEST`
+- `CORS_ORIGIN`
+- `JWT_ACCESS_SECRET`
+- `JWT_REFRESH_SECRET`
+- `JWT_ACCESS_EXPIRES_IN`
+- `JWT_REFRESH_EXPIRES_IN`
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL`
+
+### Frontend (`frontend/.env`)
+
+- `VITE_API_URL`
+
+---
 
 ## Endpoints principais (resumo)
 
 Auth:
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
 
 Projects:
-- `GET /projects`
-- `POST /projects/generate`
-- `GET /projects/:id`
-- `PATCH /projects/:id`
+
+- `GET /api/projects`
+- `POST /api/projects/generate`
+- `GET /api/projects/:id`
+- `PATCH /api/projects/:id`
+- `DELETE /api/projects/:id`
 
 Admin (requer role ADMIN):
-- `GET /admin/users`
-- `PATCH /admin/users/:id/credits`
-- `GET /admin/credits/ledger`
+
+- `GET /api/admin/users`
+- `PATCH /api/admin/users/:id/credits`
+- `GET /api/admin/credits/ledger`
+
+---
 
 ## Observacoes de infraestrutura
 
-- `helmet` habilitado.
-- `cors` configurado por `CORS_ORIGIN` (aceita lista separada por virgula).
-- rate limit aplicado em `/auth/*` e `POST /projects/generate`.
-- validacao centralizada com middleware `validate` (Zod).
-- tratamento de erro padronizado com `code` e `message`.
-- logs de request via `morgan`.
+- `helmet` habilitado
+- `cors` configurado por `CORS_ORIGIN` (aceita lista separada por virgula)
+- rate limit aplicado em `/auth/*` e `POST /projects/generate`
+- validacao centralizada com middleware `validate` (Zod)
+- tratamento de erro padronizado com `code` e `message`
+- logs de request via `morgan`
+- idempotencia de geracao via header `Idempotency-Key`
+
+---
 
 ## Comandos na raiz
 
-Comandos para facilitar o fluxo sem trocar de pasta:
+Instalar dependencias de backend + frontend:
 
-1. Instalar dependencias do backend e frontend:
-   - `npm run install:all`
-2. Executar backend e frontend juntos:
-   - `npm run dev`
-3. Executar migrations e seeders do backend:
-   - `npm run db:setup`
-   - o script roda `db:migrate` e, se houver seeders, executa `db:seed:all`
+```bash
+npm run install:all
+```
+
+Rodar backend + frontend em desenvolvimento:
+
+```bash
+npm run dev
+```
+
+Rodar build completo do workspace:
+
+```bash
+npm run build
+```
+
+Build individual:
+
+```bash
+npm run build:backend
+npm run build:frontend
+```
+
+Rodar migrations e seeders:
+
+```bash
+npm run db:setup
+```
+
+---
+
+## Deploy no Render
+
+### Backend (Web Service)
+
+Crie um Web Service no Render apontando para este repositorio.
+
+Configuracao sugerida:
+
+- Root Directory: `backend`
+- Build Command: `npm install`
+- Start Command: `npm start`
+- Runtime: Node
+
+Env vars obrigatorias do backend:
+
+- `NODE_ENV=production`
+- `DATABASE_URL` (do Postgres do Render)
+- `CORS_ORIGIN` (URL publica do frontend no Render)
+- `JWT_ACCESS_SECRET`
+- `JWT_REFRESH_SECRET`
+- `JWT_ACCESS_EXPIRES_IN`
+- `JWT_REFRESH_EXPIRES_IN`
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL` (ex.: `gemini-2.5-flash`)
+
+### Banco Postgres (Render)
+
+Crie um banco PostgreSQL no Render e conecte no backend via `DATABASE_URL`.
+
+Depois rode:
+
+- `npm run db:migrate`
+- `npm run db:seed:all` (se houver seeders)
+
+### Frontend (Static Site)
+
+Crie um Static Site no Render.
+
+Configuracao sugerida:
+
+- Root Directory: `frontend`
+- Build Command: `npm install && npm run build`
+- Publish Directory: `dist`
+
+Env var obrigatoria do frontend:
+
+- `VITE_API_URL=https://SEU_BACKEND.onrender.com/api`
+
+### Checklist de deploy
+
+- `GET /api/health` do backend respondendo
+- frontend autenticando corretamente
+- CORS liberado apenas para o dominio do frontend
+- migrations aplicadas no banco de producao
+- segredos JWT e Gemini configurados

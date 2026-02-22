@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import MarkdownViewer from "../components/MarkdownViewer.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
@@ -9,9 +9,11 @@ import api from "../lib/api.js";
 
 function Project() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -36,6 +38,34 @@ function Project() {
         <Link to="/">
           <Button variant="ghost">Voltar</Button>
         </Link>
+        <Button
+          variant="secondary"
+          className="border-rose-200/80 text-rose-700 hover:bg-rose-50"
+          disabled={loading || deleting}
+          onClick={async () => {
+            const confirmed = window.confirm(
+              "Tem certeza que deseja excluir este projeto?"
+            );
+            if (!confirmed) {
+              return;
+            }
+
+            try {
+              setDeleting(true);
+              await api.delete(`/projects/${id}`);
+              navigate("/", { replace: true });
+            } catch (requestError) {
+              setError(
+                requestError?.response?.data?.message ||
+                  "Nao foi possivel excluir o projeto."
+              );
+            } finally {
+              setDeleting(false);
+            }
+          }}
+        >
+          {deleting ? "Excluindo..." : "Excluir projeto"}
+        </Button>
       </div>
 
       {loading ? (

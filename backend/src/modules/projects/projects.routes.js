@@ -20,5 +20,6 @@ router.post(
 );
 router.get("/:id", validate(projectIdSchema), projectsController.getProjectById);
 router.patch("/:id", validate(updateProjectSchema), projectsController.updateProject);
+router.delete("/:id", validate(projectIdSchema), projectsController.deleteProject);
 
 module.exports = router;

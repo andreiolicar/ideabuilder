@@ -2,7 +2,8 @@ require("../config/env");
 const { httpError } = require("../utils/httpError");
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"];
 const JSON_START_DELIMITER = "<<JSON_START>>";
 const JSON_END_DELIMITER = "<<JSON_END>>";
 
@@ -114,6 +115,33 @@ const normalizeResult = (parsed) => ({
     typeof parsed?.suggested_title === "string" ? parsed.suggested_title : ""
 });
 
+const normalizeModelName = (name) => String(name || "").replace(/^models\//, "");
+
+const buildModelCandidates = () => {
+  const configured = normalizeModelName(DEFAULT_MODEL);
+  const candidates = [configured, ...FALLBACK_MODELS.map(normalizeModelName)];
+  return [...new Set(candidates)];
+};
+
+const callGemini = async ({ model, apiKey, prompt }) => {
+  const url = `${GEMINI_API_BASE_URL}/${model}:generateContent?key=${apiKey}`;
+
+  return fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }]
+        }
+      ]
+    })
+  });
+};
+
 const generateProjectDocs = async (projectPayload) => {
   const apiKey = process.env.GEMINI_API_KEY;
 
@@ -122,38 +150,45 @@ const generateProjectDocs = async (projectPayload) => {
   }
 
   const prompt = buildPrompt(projectPayload);
-  const url = `${GEMINI_API_BASE_URL}/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+  const modelCandidates = buildModelCandidates();
 
   console.info("[geminiService] starting generation");
 
-  let response;
-  try {
-    response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }]
-          }
-        ]
-      })
-    });
-  } catch (error) {
-    console.error("[geminiService] request failed:", error.message);
-    throw httpError(502, "Failed to reach Gemini API");
+  let response = null;
+  let responseBody = "";
+  for (const model of modelCandidates) {
+    try {
+      console.info(`[geminiService] trying model: ${model}`);
+      response = await callGemini({ model, apiKey, prompt });
+      responseBody = await response.text();
+    } catch (error) {
+      console.error("[geminiService] request failed:", error.message);
+      throw httpError(502, "Failed to reach Gemini API");
+    }
+
+    if (response.ok) {
+      console.info(`[geminiService] model accepted: ${model}`);
+      break;
+    }
+
+    const isModelNotFound =
+      response.status === 404 &&
+      responseBody.toLowerCase().includes("not found");
+
+    if (!isModelNotFound) {
+      console.error("[geminiService] Gemini API error:", response.status, responseBody);
+      throw httpError(502, "Gemini API returned an error");
+    }
+
+    console.warn(`[geminiService] model not available: ${model}. Trying fallback...`);
   }
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error("[geminiService] Gemini API error:", response.status, errorBody);
-    throw httpError(502, "Gemini API returned an error");
+  if (!response || !response.ok) {
+    console.error("[geminiService] no valid model available:", modelCandidates.join(", "));
+    throw httpError(502, "No compatible Gemini model available for generateContent");
   }
 
-  const apiResponse = await response.json();
+  const apiResponse = JSON.parse(responseBody);
   const rawText = extractTextFromGeminiResponse(apiResponse);
 
   let parsed;

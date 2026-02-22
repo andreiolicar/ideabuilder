@@ -30,7 +30,7 @@ const refresh = async (req, res, next) => {
 const logout = async (req, res, next) => {
   try {
     await authService.logout(req.body);
-    return res.status(200).json({ message: "Logged out successfully" });
+    return res.status(204).send();
   } catch (error) {
     return next(error);
   }

@@ -1,5 +1,9 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../lib/api.js";
+import { generateIdempotencyKey } from "../lib/idempotency.js";
 import Button from "./ui/Button.jsx";
+import Chip from "./ui/Chip.jsx";
 import Input from "./ui/Input.jsx";
 import Modal from "./ui/Modal.jsx";
 import Textarea from "./ui/Textarea.jsx";
@@ -7,21 +11,29 @@ import Textarea from "./ui/Textarea.jsx";
 const initialState = {
   title: "",
   category: "",
-  tags: "",
+  tags: [],
   description: "",
   maxCost: "",
   preferences: "",
   constraints: ""
 };
 
+const tagOptions = [
+  "IA",
+  "IoT",
+  "Web",
+  "Mobile",
+  "Dados",
+  "Seguranca",
+  "Educacao",
+  "Saude"
+];
+
 function toPayload(form) {
   return {
     title: form.title.trim() || undefined,
     category: form.category.trim() || undefined,
-    tags: form.tags
-      .split(",")
-      .map((tag) => tag.trim())
-      .filter(Boolean),
+    tags: form.tags,
     description: form.description.trim(),
     maxCost: Number(form.maxCost || 0),
     preferences: form.preferences.trim() || undefined,
@@ -29,12 +41,41 @@ function toPayload(form) {
   };
 }
 
-function CreateProjectModal({ open, onClose, onCreate, loading }) {
+function mapGenerateError(error) {
+  const status = error?.response?.status;
+  const message = error?.response?.data?.message || "";
+
+  if (status === 402) {
+    return "Sem creditos suficientes para gerar um projeto.";
+  }
+
+  if (status === 502 || message.toLowerCase().includes("gemini")) {
+    return "Falha de IA ao gerar documentos. Tente novamente em instantes.";
+  }
+
+  return message || "Nao foi possivel gerar o projeto.";
+}
+
+function CreateProjectModal({ open, onClose }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState(initialState);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (key) => (event) => {
     setForm((current) => ({ ...current, [key]: event.target.value }));
+  };
+
+  const toggleTag = (tag) => {
+    setForm((current) => {
+      const exists = current.tags.includes(tag);
+      return {
+        ...current,
+        tags: exists
+          ? current.tags.filter((item) => item !== tag)
+          : [...current.tags, tag]
+      };
+    });
   };
 
   const handleSubmit = async (event) => {
@@ -53,11 +94,18 @@ function CreateProjectModal({ open, onClose, onCreate, loading }) {
     }
 
     try {
-      await onCreate(payload);
+      setLoading(true);
+      const { data } = await api.post("/projects/generate", payload, {
+        headers: { "Idempotency-Key": generateIdempotencyKey() }
+      });
+
       setForm(initialState);
       onClose();
+      navigate(`/projects/${data.projectId}`);
     } catch (submitError) {
-      setError(submitError?.response?.data?.message || "Nao foi possivel gerar o projeto.");
+      setError(mapGenerateError(submitError));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,6 +116,9 @@ function CreateProjectModal({ open, onClose, onCreate, loading }) {
           <h2 className="text-lg font-semibold text-zinc-900">Criar Projeto</h2>
           <p className="text-sm text-zinc-500">
             Preencha os campos para gerar os 3 documentos automaticamente.
+          </p>
+          <p className="text-xs font-medium text-teal-700">
+            Esta acao vai consumir 1 credito.
           </p>
         </div>
 
@@ -88,14 +139,25 @@ function CreateProjectModal({ open, onClose, onCreate, loading }) {
           />
         </div>
 
-        <Input
-          id="tags"
-          label="Tags"
-          helperText="Separe por virgulas. Ex.: IA, Dados, Educacao"
-          value={form.tags}
-          onChange={handleChange("tags")}
-          placeholder="IA, Web, Dados"
-        />
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-zinc-700">Tags</p>
+          <div className="flex flex-wrap gap-2 rounded-2xl border border-zinc-200/80 bg-zinc-50/80 p-3">
+            {tagOptions.map((tag) => {
+              const selected = form.tags.includes(tag);
+              return (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className="rounded-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-700/20"
+                >
+                  <Chip tone={selected ? "accent" : "default"}>{tag}</Chip>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-zinc-500">Selecione uma ou mais tags.</p>
+        </div>
 
         <Textarea
           id="description"
@@ -139,7 +201,7 @@ function CreateProjectModal({ open, onClose, onCreate, loading }) {
         {error ? <p className="text-sm text-rose-600">{error}</p> : null}
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
             Cancelar
           </Button>
           <Button type="submit" disabled={loading}>

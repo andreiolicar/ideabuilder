@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import CreateProjectModal from "../components/CreateProjectModal.jsx";
 import ProjectCard from "../components/ProjectCard.jsx";
 import Button from "../components/ui/Button.jsx";
@@ -9,7 +9,6 @@ import Input from "../components/ui/Input.jsx";
 import Skeleton from "../components/ui/Skeleton.jsx";
 import useAuth from "../context/useAuth.js";
 import api from "../lib/api.js";
-import { generateIdempotencyKey } from "../lib/idempotency.js";
 
 const initialFilters = {
   search: "",
@@ -21,15 +20,13 @@ const initialFilters = {
 
 function Dashboard() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   const [filters, setFilters] = useState(initialFilters);
   const [projects, setProjects] = useState([]);
-  const [meta, setMeta] = useState({ page: 1, totalPages: 1 });
+  const [meta, setMeta] = useState({ page: 1, totalPages: 1, balance: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
 
   const fetchProjects = async (nextFilters = filters) => {
     setLoading(true);
@@ -41,7 +38,7 @@ function Dashboard() {
       );
       const { data } = await api.get("/projects", { params });
       setProjects(data.items || []);
-      setMeta(data.meta || { page: 1, totalPages: 1 });
+      setMeta(data.meta || { page: 1, totalPages: 1, balance: 0 });
     } catch (requestError) {
       setError(requestError?.response?.data?.message || "Falha ao carregar projetos.");
     } finally {
@@ -65,18 +62,6 @@ function Dashboard() {
     fetchProjects(next);
   };
 
-  const handleCreateProject = async (payload) => {
-    setCreating(true);
-    try {
-      const { data } = await api.post("/projects/generate", payload, {
-        headers: { "Idempotency-Key": generateIdempotencyKey() }
-      });
-      navigate(`/projects/${data.projectId}`);
-    } finally {
-      setCreating(false);
-    }
-  };
-
   const changePage = (step) => {
     const nextPage = Math.min(Math.max(1, meta.page + step), meta.totalPages || 1);
     const nextFilters = { ...filters, page: nextPage };
@@ -96,7 +81,9 @@ function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Chip tone="accent">1 credito por geracao</Chip>
+          <Chip tone="accent">
+            Saldo: {meta.balance ?? 0} {(meta.balance ?? 0) === 1 ? "credito" : "creditos"}
+          </Chip>
           <Chip>{user?.role || "USER"}</Chip>
           {user?.role === "ADMIN" ? (
             <Link to="/admin">
@@ -184,8 +171,6 @@ function Dashboard() {
       <CreateProjectModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onCreate={handleCreateProject}
-        loading={creating}
       />
     </main>
   );

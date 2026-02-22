@@ -41,9 +41,19 @@ const generateProject = async (req, res, next) => {
   }
 };
 
+const deleteProject = async (req, res, next) => {
+  try {
+    await projectsService.deleteProject(req.user.id, req.params.id);
+    return res.status(204).send();
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
   listProjects,
   getProjectById,
   updateProject,
-  generateProject
+  generateProject,
+  deleteProject
 };
