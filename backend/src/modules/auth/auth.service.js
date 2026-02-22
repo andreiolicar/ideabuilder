@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const env = require("../../config/env");
 const { User, RefreshToken, sequelize } = require("../../models");
 const { httpError } = require("../../utils/httpError");
+const emailService = require("../../services/email/email.service");
 
 const SALT_ROUNDS = 12;
 
@@ -114,6 +115,19 @@ const register = async ({ name, email, password }) => {
     };
   });
 
+  try {
+    await emailService.enqueueEmail("REGISTER", {
+      userId: result.user.id,
+      toEmail: result.user.email,
+      payload: {
+        name: result.user.name,
+        email: result.user.email
+      }
+    });
+  } catch (error) {
+    console.error("[email] register notification failed:", error.message);
+  }
+
   return {
     user: sanitizeUser(result.user),
     accessToken: result.accessToken,
@@ -140,6 +154,19 @@ const login = async ({ email, password }) => {
   }
 
   const tokens = await issueTokenPair(user);
+
+  try {
+    await emailService.enqueueEmail("LOGIN", {
+      userId: user.id,
+      toEmail: user.email,
+      payload: {
+        email: user.email,
+        loggedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error("[email] login notification failed:", error.message);
+  }
 
   return {
     user: sanitizeUser(user),

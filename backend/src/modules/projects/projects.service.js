@@ -1,8 +1,9 @@
 const { Op, Transaction } = require("sequelize");
-const { Project, Document, CreditLedger, sequelize } = require("../../models");
+const { Project, Document, CreditLedger, User, sequelize } = require("../../models");
 const { httpError } = require("../../utils/httpError");
 const creditsService = require("../credits/credits.service");
 const geminiService = require("../../services/geminiService");
+const emailService = require("../../services/email/email.service");
 
 const PAGE_SIZE = 10;
 
@@ -248,6 +249,8 @@ const generateProject = async (userId, payload, idempotencyKey) => {
     const finalTitle =
       sanitizeGeneratedTitle(generated.suggested_title) || PLACEHOLDER_TITLE;
 
+    let readyProjectTitle = finalTitle;
+
     await runWithStrongIsolation(async (transaction) => {
       const project = await Project.findOne({
         where: {
@@ -269,6 +272,7 @@ const generateProject = async (userId, payload, idempotencyKey) => {
         },
         { transaction }
       );
+      readyProjectTitle = project.title;
 
       await Document.bulkCreate(
         [
@@ -291,6 +295,26 @@ const generateProject = async (userId, payload, idempotencyKey) => {
         { transaction }
       );
     });
+
+    try {
+      const user = await User.findByPk(userId, {
+        attributes: ["id", "email", "name"]
+      });
+      if (user?.email) {
+        await emailService.enqueueEmail("PROJECT_CREATED", {
+          userId: user.id,
+          toEmail: user.email,
+          payload: {
+            projectId,
+            projectTitle: readyProjectTitle,
+            name: user.name,
+            email: user.email
+          }
+        });
+      }
+    } catch (notifyError) {
+      console.error("[email] project-created notification failed:", notifyError.message);
+    }
 
     return { projectId };
   } catch (error) {

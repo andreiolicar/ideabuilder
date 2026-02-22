@@ -1,6 +1,7 @@
 const { Transaction, UniqueConstraintError } = require("sequelize");
-const { CreditLedger, sequelize } = require("../../models");
+const { CreditLedger, User, sequelize } = require("../../models");
 const { httpError } = require("../../utils/httpError");
+const emailService = require("../../services/email/email.service");
 
 const ISOLATION_LEVELS = Transaction.ISOLATION_LEVELS;
 
@@ -52,6 +53,41 @@ const getBalance = async (userId, options = {}) => {
   return sumBalance(userId, options.transaction);
 };
 
+const notifyCreditChange = async (entry, transaction) => {
+  try {
+    const user = await User.findByPk(entry.userId, {
+      attributes: ["id", "email", "name"],
+      transaction
+    });
+
+    if (!user?.email) {
+      return;
+    }
+
+    const newBalance = await sumBalance(entry.userId, transaction);
+    await emailService.enqueueEmail(
+      "CREDITS_CHANGED",
+      {
+        userId: user.id,
+        toEmail: user.email,
+        payload: {
+          name: user.name,
+          email: user.email,
+          type: entry.type,
+          reason: entry.reason,
+          amount: entry.amount,
+          projectId: entry.projectId || null,
+          performedBy: entry.performedBy || null,
+          newBalance
+        }
+      },
+      { transaction }
+    );
+  } catch (error) {
+    console.error("[email] credits notification failed:", error.message);
+  }
+};
+
 const debitForGeneration = async (userId, projectId, idempotencyKey, options = {}) => {
   if (!idempotencyKey) {
     throw httpError(400, "Idempotency key is required");
@@ -74,7 +110,7 @@ const debitForGeneration = async (userId, projectId, idempotencyKey, options = {
     }
 
     try {
-      return await CreditLedger.create(
+      const created = await CreditLedger.create(
         {
           userId,
           projectId,
@@ -85,6 +121,8 @@ const debitForGeneration = async (userId, projectId, idempotencyKey, options = {
         },
         { transaction }
       );
+      await notifyCreditChange(created, transaction);
+      return created;
     } catch (error) {
       if (!(error instanceof UniqueConstraintError)) {
         throw error;
@@ -127,7 +165,7 @@ const creditRefund = async (userId, projectId, idempotencyKey, options = {}) => 
     }
 
     try {
-      return await CreditLedger.create(
+      const created = await CreditLedger.create(
         {
           userId,
           projectId,
@@ -138,6 +176,8 @@ const creditRefund = async (userId, projectId, idempotencyKey, options = {}) => 
         },
         { transaction }
       );
+      await notifyCreditChange(created, transaction);
+      return created;
     } catch (error) {
       if (!(error instanceof UniqueConstraintError) || !where) {
         throw error;
@@ -154,7 +194,7 @@ const adminAdjust = async (userId, delta, adminId, _note, options = {}) => {
   }
 
   return runInTransaction(async (transaction) => {
-    return CreditLedger.create(
+    const created = await CreditLedger.create(
       {
         userId,
         type: delta > 0 ? "CREDIT" : "DEBIT",
@@ -164,6 +204,8 @@ const adminAdjust = async (userId, delta, adminId, _note, options = {}) => {
       },
       { transaction }
     );
+    await notifyCreditChange(created, transaction);
+    return created;
   }, options);
 };
 
