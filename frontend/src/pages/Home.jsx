@@ -6,6 +6,7 @@ import FaqSection from "../components/landing/FaqSection.jsx";
 import GenerationSection from "../components/landing/GenerationSection.jsx";
 import HeroSection from "../components/landing/HeroSection.jsx";
 import PricingSection from "../components/landing/PricingSection.jsx";
+import ReviewsSection from "../components/landing/ReviewsSection.jsx";
 import useAuth from "../context/useAuth.js";
 import "./Home.css";
 
@@ -41,6 +42,7 @@ function Home() {
       <HeroSection isAuthenticated={isAuthenticated} />
       <DocsSection />
       <GenerationSection />
+      <ReviewsSection />
       <PricingSection />
       <FaqSection
         openIndex={openFaq}
