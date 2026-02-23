@@ -1,42 +1,43 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const env = require("../../config/env");
 
-let transporter = null;
+let resendClient = null;
 
-const hasSmtpConfig = () =>
-  Boolean(env.smtpHost && env.smtpPort && env.smtpUser && env.smtpPass && env.smtpFromEmail);
+const hasEmailProviderConfig = () =>
+  Boolean(env.resendApiKey && env.smtpFromEmail);
 
-const getTransporter = () => {
-  if (transporter) {
-    return transporter;
+const getResendClient = () => {
+  if (resendClient) {
+    return resendClient;
   }
 
-  transporter = nodemailer.createTransport({
-    host: env.smtpHost,
-    port: env.smtpPort,
-    secure: process.env.SMTP_SECURE === "true",
-    connectionTimeout: 10000,
-    auth: {
-      user: env.smtpUser,
-      pass: env.smtpPass
-    }
-  });
+  resendClient = new Resend(process.env.RESEND_API_KEY);
 
-  return transporter;
+  return resendClient;
 };
 
 const sendEmail = async ({ to, subject, html, text }) => {
-  const client = getTransporter();
-  return client.sendMail({
+  const resend = getResendClient();
+  const { data, error } = await resend.emails.send({
     from: `${env.smtpFromName} <${env.smtpFromEmail}>`,
     to,
     subject,
     html,
     text
   });
+
+  if (error) {
+    const transportError = new Error(error.message || "Resend API error");
+    transportError.code = error.name || error.statusCode || "RESEND_ERROR";
+    transportError.command = "resend.emails.send";
+    transportError.details = error;
+    throw transportError;
+  }
+
+  return data;
 };
 
 module.exports = {
-  hasSmtpConfig,
+  hasEmailProviderConfig,
   sendEmail
 };

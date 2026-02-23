@@ -1,7 +1,7 @@
 const { Op, Transaction } = require("sequelize");
 const env = require("../../config/env");
 const { EmailQueue, sequelize } = require("../../models");
-const { sendEmail, hasSmtpConfig } = require("./email.transport");
+const { sendEmail, hasEmailProviderConfig } = require("./email.transport");
 
 const POLL_INTERVAL_MS = 5000;
 const BATCH_SIZE = 20;
@@ -133,9 +133,9 @@ const processQueue = async () => {
     return;
   }
 
-  if (!hasSmtpConfig()) {
+  if (!hasEmailProviderConfig()) {
     if (!warnedMissingConfig) {
-      console.warn("[email] SMTP config missing, queue worker is idle");
+      console.warn("[email] Resend config missing, queue worker is idle");
       warnedMissingConfig = true;
     }
     return;

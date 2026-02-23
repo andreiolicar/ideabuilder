@@ -16,6 +16,7 @@ const env = {
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || "dev-refresh-secret",
   jwtAccessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || "15m",
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || "7d",
+  resendApiKey: process.env.RESEND_API_KEY || "",
   smtpHost: process.env.SMTP_HOST || "",
   smtpPort: Number(process.env.SMTP_PORT) || 587,
   smtpSecure: String(process.env.SMTP_SECURE || "false").toLowerCase() === "true",
