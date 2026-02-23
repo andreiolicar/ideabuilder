@@ -7,7 +7,6 @@
     "dev": "nodemon src/server.js",
     "build": "node -e \"console.log('No build step required for backend')\"",
     "start": "node src/server.js",
-    "set-admin": "node set-admin.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
     "db:seed:all": "sequelize-cli db:seed:all"
