@@ -98,6 +98,13 @@ const processJob = async (job) => {
     console.log(`[email] sent jobId=${job.id} event=${job.eventType}`);
     return;
   } catch (error) {
+    console.error(
+      "[email] Erro detalhado:",
+      error?.message,
+      error?.code,
+      error?.command
+    );
+
     const nextAttemptCount = Number(job.attemptCount || 0) + 1;
     const exhausted = nextAttemptCount >= Number(job.maxAttempts || env.emailRetryMax);
 

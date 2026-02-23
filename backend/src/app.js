@@ -10,6 +10,7 @@ const {
 } = require("./middlewares/errorHandler");
 
 const app = express();
+app.set("trust proxy", 1);
 const corsOrigins = env.corsOrigin
   .split(",")
   .map((origin) => origin.trim())
