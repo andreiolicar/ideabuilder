@@ -4,9 +4,6 @@ const DOC_HEADINGS = {
   ROADMAP: "# Roadmap de Desenvolvimento (2 anos)"
 };
 
-const COST_FOOTER =
-  "_Valores estimados para planejamento academico; validar com fornecedores._";
-
 const cleanText = (value) => String(value || "").trim();
 
 const hasCostSection = (content) => /#{1,3}\s+.*custo/i.test(String(content || ""));
@@ -104,10 +101,7 @@ const ensureCostContent = (content, payload, documentType) => {
   const alreadyHasCosts = hasCostSection(normalized) && hasMarkdownTable(normalized);
 
   if (alreadyHasCosts) {
-    if (normalized.includes(COST_FOOTER)) {
-      return normalized;
-    }
-    return `${normalized}\n\n${COST_FOOTER}`;
+    return normalized;
   }
 
   const rows = buildDefaultCostRows(payload, documentType);
@@ -121,9 +115,7 @@ const ensureCostContent = (content, payload, documentType) => {
     "",
     sectionTitle,
     "",
-    buildCostTable(rows),
-    "",
-    COST_FOOTER
+    buildCostTable(rows)
   ].join("\n");
 };
 

@@ -2,7 +2,7 @@ const PDFDocument = require("pdfkit");
 const { Project, Document } = require("../../models");
 const { httpError } = require("../../utils/httpError");
 
-const PAGE_MARGIN = 48;
+const PAGE_MARGIN = 35;
 const PROJECT_DOC_ORDER = ["GENERAL", "TECH_SPECS", "ROADMAP"];
 const TYPE_LABEL = {
   GENERAL: "Geral",
@@ -14,6 +14,7 @@ const TYPE_FILE_SUFFIX = {
   TECH_SPECS: "tech",
   ROADMAP: "roadmap"
 };
+const BASE_LINE_GAP = 1.2;
 
 const slugify = (value) =>
   String(value || "projeto")
@@ -53,39 +54,70 @@ const buildPdfBuffer = (renderFn) =>
     }
   });
 
-const ensureSpace = (doc, neededHeight = 24) => {
-  if (doc.y + neededHeight <= doc.page.height - PAGE_MARGIN) {
-    return;
-  }
+const getAvailableWidth = (doc) => doc.page.width - PAGE_MARGIN * 2;
+const getBottomLimit = (doc) => doc.page.height - PAGE_MARGIN;
+
+const addTrackedPage = (doc) => {
   doc.addPage();
+  doc.x = PAGE_MARGIN;
+  doc.y = PAGE_MARGIN;
+};
+
+const getDefaultTextOptions = (doc) => ({
+  width: getAvailableWidth(doc),
+  align: "justify",
+  lineGap: BASE_LINE_GAP
+});
+
+const drawText = (doc, text, options = {}) => {
+  const content = String(text ?? "");
+  const { x, y, ...rest } = options;
+  const resolved = { ...getDefaultTextOptions(doc), ...rest };
+
+  if (x !== undefined || y !== undefined) {
+    return doc.text(content, x, y, resolved);
+  }
+
+  return doc.text(content, resolved);
+};
+
+const ensureSpace = (doc, neededHeight = 24) => {
+  if (doc.y + neededHeight <= getBottomLimit(doc)) {
+    return false;
+  }
+  addTrackedPage(doc);
+  return true;
 };
 
 const renderSectionTitle = (doc, title) => {
   ensureSpace(doc, 40);
   doc.moveDown(0.2);
-  doc.font("Helvetica-Bold").fontSize(17).fillColor("#111827").text(title, {
-    width: doc.page.width - PAGE_MARGIN * 2
-  });
+  doc.x = PAGE_MARGIN;
+  doc.font("Helvetica-Bold").fontSize(13).fillColor("#111827");
+  drawText(doc, title, { x: PAGE_MARGIN, width: getAvailableWidth(doc), align: "left", indent: 0 });
   doc.moveDown(0.3);
+  doc.x = PAGE_MARGIN;
 };
 
 const renderProjectCover = (doc, project, index, total) => {
   if (!(index === 0 && doc.y <= PAGE_MARGIN + 2)) {
-    doc.addPage();
+    addTrackedPage(doc);
   }
+  doc.x = PAGE_MARGIN;
 
   const tags = Array.isArray(project.tags) ? project.tags : [];
-  doc.font("Helvetica-Bold").fontSize(22).fillColor("#111827").text(project.title || "Projeto", {
-    width: doc.page.width - PAGE_MARGIN * 2
-  });
+  doc.font("Helvetica-Bold").fontSize(16).fillColor("#111827");
+  drawText(doc, project.title || "Projeto", { x: PAGE_MARGIN, width: getAvailableWidth(doc), align: "left", indent: 0 });
   doc.moveDown(0.4);
 
-  doc.font("Helvetica").fontSize(11).fillColor("#374151").text(`Categoria: ${project.category || "Sem categoria"}`);
-  doc.text(`Status: ${project.status}`);
-  doc.text(`Tags: ${tags.length ? tags.join(", ") : "Sem tags"}`);
-  doc.text(`Gerado em: ${new Date(project.createdAt).toLocaleString("pt-BR")}`);
-  doc.text(`Projeto ${index + 1} de ${total}`);
+  doc.font("Helvetica").fontSize(9).fillColor("#374151");
+  drawText(doc, `Categoria: ${project.category || "Sem categoria"}`, { x: PAGE_MARGIN, width: getAvailableWidth(doc), align: "left", indent: 0 });
+  drawText(doc, `Status: ${project.status}`, { x: PAGE_MARGIN, width: getAvailableWidth(doc), align: "left", indent: 0 });
+  drawText(doc, `Tags: ${tags.length ? tags.join(", ") : "Sem tags"}`, { x: PAGE_MARGIN, width: getAvailableWidth(doc), align: "left", indent: 0 });
+  drawText(doc, `Gerado em: ${new Date(project.createdAt).toLocaleString("pt-BR")}`, { x: PAGE_MARGIN, width: getAvailableWidth(doc), align: "left", indent: 0 });
+  drawText(doc, `Projeto ${index + 1} de ${total}`, { x: PAGE_MARGIN, width: getAvailableWidth(doc), align: "left", indent: 0 });
   doc.moveDown(1.2);
+  doc.x = PAGE_MARGIN;
 };
 
 const splitTableRow = (line) =>
@@ -194,18 +226,29 @@ const parseMarkdown = (content) => {
 };
 
 const renderTable = (doc, table) => {
-  const maxWidth = doc.page.width - PAGE_MARGIN * 2;
+  const maxWidth = getAvailableWidth(doc);
   const colCount = Math.max(table.header.length, ...table.rows.map((row) => row.length), 1);
   const colWidth = maxWidth / colCount;
+  const xStart = PAGE_MARGIN;
+  doc.x = PAGE_MARGIN;
+
+  const calculateRowHeight = (cells, isHeader = false) => {
+    const preparedCells = Array.from({ length: colCount }).map((_, index) => cells[index] || "");
+    const heights = preparedCells.map(
+      (cell) =>
+        doc.heightOfString(cell, {
+          width: colWidth - 6,
+          align: "left",
+          lineGap: 1
+        }) + 6
+    );
+    return Math.max(...heights, isHeader ? 18 : 16);
+  };
 
   const drawRow = (cells, isHeader = false) => {
     const preparedCells = Array.from({ length: colCount }).map((_, index) => cells[index] || "");
-    const heights = preparedCells.map((cell) => doc.heightOfString(cell, { width: colWidth - 10, align: "left" }) + 10);
-    const rowHeight = Math.max(...heights, 26);
-
-    ensureSpace(doc, rowHeight + 4);
+    const rowHeight = calculateRowHeight(preparedCells, isHeader);
     const y = doc.y;
-    const xStart = PAGE_MARGIN;
 
     if (isHeader) {
       doc.save();
@@ -216,70 +259,137 @@ const renderTable = (doc, table) => {
     preparedCells.forEach((cell, index) => {
       const x = xStart + index * colWidth;
       doc.rect(x, y, colWidth, rowHeight).stroke("#d1d5db");
-      doc.font(isHeader ? "Helvetica-Bold" : "Helvetica").fontSize(10).fillColor("#111827").text(cell, x + 5, y + 5, {
-        width: colWidth - 10,
-        align: "left"
+      doc.font(isHeader ? "Helvetica-Bold" : "Helvetica").fontSize(8.5).fillColor("#111827");
+      drawText(doc, cell, {
+        x: x + 3,
+        y: y + 3,
+        width: colWidth - 6,
+        align: "left",
+        lineGap: 1,
+        indent: 0,
+        paragraphGap: 0
       });
     });
 
     doc.y = y + rowHeight + 2;
+    return rowHeight;
   };
 
-  drawRow(table.header, true);
-  table.rows.forEach((row) => drawRow(row, false));
+  const drawHeaderWithSpaceControl = () => {
+    const headerHeight = calculateRowHeight(table.header, true);
+    ensureSpace(doc, headerHeight + 2);
+    drawRow(table.header, true);
+  };
+
+  drawHeaderWithSpaceControl();
+  table.rows.forEach((row) => {
+    const rowHeight = calculateRowHeight(row, false);
+    if (doc.y + rowHeight > getBottomLimit(doc)) {
+      addTrackedPage(doc);
+      drawHeaderWithSpaceControl();
+    }
+    drawRow(row, false);
+  });
   doc.moveDown(0.4);
+  doc.x = PAGE_MARGIN;
 };
 
+const CONTENT_CLEANUP_REGEX = /^\s*_?Valores estimados para planejamento academico; validar com fornecedores\._?\s*$/gim;
+
+const sanitizeMarkdownForPdf = (content) =>
+  String(content || "")
+    .replace(CONTENT_CLEANUP_REGEX, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
 const renderMarkdown = (doc, content) => {
-  const blocks = parseMarkdown(content);
-  const textWidth = doc.page.width - PAGE_MARGIN * 2;
+  const blocks = parseMarkdown(sanitizeMarkdownForPdf(content));
+  const textWidth = getAvailableWidth(doc);
 
   blocks.forEach((block) => {
     if (block.type === "heading") {
-      const headingSize = block.level === 1 ? 18 : block.level === 2 ? 14 : 12;
-      ensureSpace(doc, headingSize + 18);
+      const headingSize = block.level === 1 ? 16 : block.level === 2 ? 13 : 11;
+      const headingHeight = doc.heightOfString(block.text, {
+        width: textWidth,
+        align: "left",
+        lineGap: BASE_LINE_GAP
+      });
+      ensureSpace(doc, headingHeight + 16);
       doc.moveDown(0.2);
-      doc.font("Helvetica-Bold").fontSize(headingSize).fillColor("#111827").text(block.text, { width: textWidth });
+      doc.x = PAGE_MARGIN;
+      doc.font("Helvetica-Bold").fontSize(headingSize).fillColor("#111827");
+      drawText(doc, block.text, { x: PAGE_MARGIN, width: textWidth, align: "left", indent: 0 });
       doc.moveDown(0.2);
+      doc.x = PAGE_MARGIN;
       return;
     }
 
     if (block.type === "paragraph") {
-      ensureSpace(doc, 28);
-      doc.font("Helvetica").fontSize(11).fillColor("#1f2937").text(block.text, {
+      const paragraphHeight = doc.heightOfString(block.text, {
         width: textWidth,
-        lineGap: 2
+        align: "justify",
+        lineGap: BASE_LINE_GAP
       });
+      ensureSpace(doc, paragraphHeight + 10);
+      doc.x = PAGE_MARGIN;
+      doc.font("Helvetica").fontSize(9).fillColor("#1f2937");
+      drawText(doc, block.text, { x: PAGE_MARGIN, width: textWidth, align: "justify", indent: 0 });
       doc.moveDown(0.25);
+      doc.x = PAGE_MARGIN;
       return;
     }
 
     if (block.type === "list-item") {
-      ensureSpace(doc, 20);
+      const listIndent = 10;
       const bullet = block.ordered ? "1." : "\u2022";
-      doc.font("Helvetica").fontSize(11).fillColor("#1f2937").text(`${bullet} ${block.text}`, {
-        width: textWidth,
-        indent: 8
+      const listText = `${bullet} ${block.text}`;
+      const listHeight = doc.heightOfString(listText, {
+        width: textWidth - listIndent,
+        align: "left",
+        lineGap: BASE_LINE_GAP
       });
+      ensureSpace(doc, listHeight + 8);
+      doc.font("Helvetica").fontSize(9).fillColor("#1f2937");
+      drawText(doc, listText, {
+        x: PAGE_MARGIN + listIndent,
+        width: textWidth - listIndent,
+        align: "left",
+        indent: 0
+      });
+      doc.moveDown(0.1);
+      doc.x = PAGE_MARGIN;
       return;
     }
 
     if (block.type === "code") {
-      const codeHeight = doc.heightOfString(block.text || "", { width: textWidth - 20 }) + 16;
+      const codeHeight =
+        doc.heightOfString(block.text || "", {
+          width: textWidth - 20,
+          align: "left",
+          lineGap: 1
+        }) + 16;
       ensureSpace(doc, codeHeight + 8);
       const y = doc.y;
       doc.save();
       doc.rect(PAGE_MARGIN, y, textWidth, codeHeight).fill("#f9fafb").stroke("#e5e7eb");
       doc.restore();
-      doc.font("Courier").fontSize(9).fillColor("#111827").text(block.text || "", PAGE_MARGIN + 10, y + 8, {
-        width: textWidth - 20
+      doc.font("Courier").fontSize(8).fillColor("#111827");
+      drawText(doc, block.text || "", {
+        x: PAGE_MARGIN + 10,
+        y: y + 8,
+        width: textWidth - 20,
+        align: "left",
+        lineGap: 2,
+        indent: 0
       });
       doc.y = y + codeHeight + 6;
+      doc.x = PAGE_MARGIN;
       return;
     }
 
     if (block.type === "table") {
       renderTable(doc, block);
+      doc.x = PAGE_MARGIN;
     }
   });
 };
@@ -338,6 +448,7 @@ const fetchOwnedProjectsBatch = async (userId, projectIds) => {
 
 const renderSingleProjectScope = (doc, project, scope, type) => {
   renderProjectCover(doc, project, 0, 1);
+  addTrackedPage(doc);
 
   if (scope === "document") {
     const selectedDocument = getDocumentByType(project, type);
@@ -347,12 +458,12 @@ const renderSingleProjectScope = (doc, project, scope, type) => {
   }
 
   PROJECT_DOC_ORDER.forEach((documentType, index) => {
+    if (index > 0) {
+      addTrackedPage(doc);
+    }
     const selectedDocument = getDocumentByType(project, documentType);
     renderSectionTitle(doc, TYPE_LABEL[documentType]);
     renderMarkdown(doc, selectedDocument.contentMd);
-    if (index < PROJECT_DOC_ORDER.length - 1) {
-      doc.addPage();
-    }
   });
 };
 
@@ -360,16 +471,11 @@ const renderBatchScope = (doc, projects) => {
   projects.forEach((project, index) => {
     renderProjectCover(doc, project, index, projects.length);
 
-    PROJECT_DOC_ORDER.forEach((documentType, docIndex) => {
+    PROJECT_DOC_ORDER.forEach((documentType) => {
+      addTrackedPage(doc);
       const selectedDocument = getDocumentByType(project, documentType);
       renderSectionTitle(doc, TYPE_LABEL[documentType]);
       renderMarkdown(doc, selectedDocument.contentMd);
-
-      const isLastDocument = docIndex === PROJECT_DOC_ORDER.length - 1;
-      const isLastProject = index === projects.length - 1;
-      if (!(isLastDocument && isLastProject)) {
-        doc.addPage();
-      }
     });
   });
 };
@@ -380,9 +486,9 @@ const exportProjectPdf = async ({ userId, projectId, scope, type }) => {
     throw httpError(400, "type is required when scope=document");
   }
 
-  const buffer = await buildPdfBuffer((doc) =>
-    renderSingleProjectScope(doc, project, scope, type)
-  );
+  const buffer = await buildPdfBuffer((doc) => {
+    renderSingleProjectScope(doc, project, scope, type);
+  });
 
   const projectSlug = slugify(project.title);
   const filename =
@@ -396,7 +502,9 @@ const exportProjectPdf = async ({ userId, projectId, scope, type }) => {
 const exportProjectsBatchPdf = async ({ userId, projectIds }) => {
   const projects = await fetchOwnedProjectsBatch(userId, projectIds);
 
-  const buffer = await buildPdfBuffer((doc) => renderBatchScope(doc, projects));
+  const buffer = await buildPdfBuffer((doc) => {
+    renderBatchScope(doc, projects);
+  });
   const filename = `projetos-selecionados-${formatTimestamp()}.pdf`;
   return { buffer, filename };
 };
