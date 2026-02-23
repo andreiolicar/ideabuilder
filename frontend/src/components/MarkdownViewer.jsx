@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import useToast from "../context/useToast.js";
 import Button from "./ui/Button.jsx";
 import SegmentedTabs from "./ui/SegmentedTabs.jsx";
@@ -73,7 +74,7 @@ function MarkdownViewer({ documents = [], projectTitle = "" }) {
 
       <div className="card">
         <div className="markdown-content">
-          <ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {contentToRender || "Documento indisponivel."}
           </ReactMarkdown>
         </div>

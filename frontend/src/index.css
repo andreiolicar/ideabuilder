@@ -660,6 +660,29 @@ select:focus-visible {
   min-height: 84px;
 }
 
+.project-select-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--bg-glass);
+  cursor: pointer;
+  color: transparent;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
+}
+
+.project-select-check.is-selected {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: #fff;
+}
+
 .modal--loading {
   max-width: 460px;
 }
@@ -931,6 +954,38 @@ select:focus-visible {
   border-radius: var(--radius-md);
   padding: var(--space-4);
   overflow-x: auto;
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-3) 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.markdown-content th,
+.markdown-content td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+.markdown-content th:last-child,
+.markdown-content td:last-child {
+  border-right: none;
+}
+
+.markdown-content tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown-content th {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .table-wrapper {

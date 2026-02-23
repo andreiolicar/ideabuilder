@@ -16,7 +16,9 @@ import {
   UsersIcon
 } from "../components/ui/SidebarIcons.jsx";
 import useAuth from "../context/useAuth.js";
+import useToast from "../context/useToast.js";
 import api from "../lib/api.js";
+import { downloadFromAxiosPdfResponse } from "../lib/download.js";
 
 function simplifyTitle(title) {
   const normalized = String(title || "").trim();
@@ -32,11 +34,14 @@ function Project() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { addToast } = useToast();
   const [project, setProject] = useState(null);
   const [balance, setBalance] = useState("--");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [exportingType, setExportingType] = useState("");
+  const [exportingComplete, setExportingComplete] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -56,6 +61,52 @@ function Project() {
 
     fetchProject();
   }, [id]);
+
+  const exportDocument = async (type) => {
+    try {
+      setExportingType(type);
+      const response = await api.get(`/projects/${id}/export/pdf`, {
+        params: { scope: "document", type },
+        responseType: "blob"
+      });
+      downloadFromAxiosPdfResponse(response, `projeto-${type.toLowerCase()}.pdf`);
+      addToast({
+        title: "Exportacao concluida",
+        message: `Documento ${type} exportado com sucesso.`,
+        tone: "success"
+      });
+    } catch (requestError) {
+      const message =
+        requestError?.response?.data?.message || "Nao foi possivel exportar o documento.";
+      setError(message);
+      addToast({ title: "Erro", message, tone: "error" });
+    } finally {
+      setExportingType("");
+    }
+  };
+
+  const exportProjectComplete = async () => {
+    try {
+      setExportingComplete(true);
+      const response = await api.get(`/projects/${id}/export/pdf`, {
+        params: { scope: "project" },
+        responseType: "blob"
+      });
+      downloadFromAxiosPdfResponse(response, "projeto-completo.pdf");
+      addToast({
+        title: "Exportacao concluida",
+        message: "Projeto completo exportado com sucesso.",
+        tone: "success"
+      });
+    } catch (requestError) {
+      const message =
+        requestError?.response?.data?.message || "Nao foi possivel exportar o projeto.";
+      setError(message);
+      addToast({ title: "Erro", message, tone: "error" });
+    } finally {
+      setExportingComplete(false);
+    }
+  };
 
   return (
     <div className="dashboard-layout">
@@ -161,6 +212,26 @@ function Project() {
                 {(project?.tags || []).map((tag) => (
                   <Chip key={tag}>{tag}</Chip>
                 ))}
+              </div>
+            </Card>
+
+            <Card className="stack-md">
+              <div className="flex-between" style={{ gap: "var(--space-2)", flexWrap: "wrap" }}>
+                <h3 className="heading-sm">Exportacao PDF</h3>
+              </div>
+              <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>
+                <Button variant="secondary" onClick={() => exportDocument("GENERAL")} disabled={Boolean(exportingType) || exportingComplete}>
+                  {exportingType === "GENERAL" ? "Exportando Geral..." : "Exportar Geral (PDF)"}
+                </Button>
+                <Button variant="secondary" onClick={() => exportDocument("TECH_SPECS")} disabled={Boolean(exportingType) || exportingComplete}>
+                  {exportingType === "TECH_SPECS" ? "Exportando Tech..." : "Exportar Tech (PDF)"}
+                </Button>
+                <Button variant="secondary" onClick={() => exportDocument("ROADMAP")} disabled={Boolean(exportingType) || exportingComplete}>
+                  {exportingType === "ROADMAP" ? "Exportando Roadmap..." : "Exportar Roadmap (PDF)"}
+                </Button>
+                <Button onClick={exportProjectComplete} disabled={Boolean(exportingType) || exportingComplete}>
+                  {exportingComplete ? "Exportando Projeto..." : "Exportar Projeto Completo (PDF)"}
+                </Button>
               </div>
             </Card>
 

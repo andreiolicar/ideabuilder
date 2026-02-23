@@ -4,6 +4,8 @@ const { httpError } = require("../../utils/httpError");
 const creditsService = require("../credits/credits.service");
 const geminiService = require("../../services/geminiService");
 const emailService = require("../../services/email/email.service");
+const documentQualityService = require("./documentQuality.service");
+const projectExportService = require("./projectExport.service");
 
 const PAGE_SIZE = 10;
 
@@ -245,7 +247,11 @@ const generateProject = async (userId, payload, idempotencyKey) => {
     projectId = creationResult.projectId;
     debitApplied = true;
 
-    const generated = await geminiService.generateProjectDocs(payload);
+    const generatedRaw = await geminiService.generateProjectDocs(payload);
+    const generated = documentQualityService.enrichGeneratedDocuments(
+      payload,
+      generatedRaw
+    );
     const finalTitle =
       sanitizeGeneratedTitle(generated.suggested_title) || PLACEHOLDER_TITLE;
 
@@ -363,10 +369,18 @@ const deleteProject = async (userId, projectId) => {
   await project.destroy();
 };
 
+const exportProjectPdf = async ({ userId, projectId, scope, type }) =>
+  projectExportService.exportProjectPdf({ userId, projectId, scope, type });
+
+const exportProjectsBatchPdf = async ({ userId, projectIds }) =>
+  projectExportService.exportProjectsBatchPdf({ userId, projectIds });
+
 module.exports = {
   listProjects,
   getProjectById,
   updateProject,
   generateProject,
-  deleteProject
+  deleteProject,
+  exportProjectPdf,
+  exportProjectsBatchPdf
 };

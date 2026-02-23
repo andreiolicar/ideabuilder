@@ -3,7 +3,8 @@ const { httpError } = require("../utils/httpError");
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models";
 const DEFAULT_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-flash-latest"];
+const FALLBACK_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"];
+const REQUEST_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS || 35000);
 const JSON_START_DELIMITER = "<<JSON_START>>";
 const JSON_END_DELIMITER = "<<JSON_END>>";
 
@@ -20,11 +21,19 @@ const buildPrompt = (projectPayload) => {
 
   return [
     "Voce e um assistente especializado em TCC.",
-    "Gere 3 documentos em Markdown para o projeto informado.",
+    "Gere 3 documentos em Markdown para o projeto informado, com estrutura profissional.",
     "Retorne SOMENTE um JSON valido com as chaves:",
     "general_md, tech_specs_md, roadmap_md, suggested_title.",
     `Envolva o JSON com os delimitadores ${JSON_START_DELIMITER} e ${JSON_END_DELIMITER}.`,
     "Nao retorne explicacoes extras.",
+    "",
+    "Requisitos obrigatorios de estrutura:",
+    "1) general_md deve conter: titulo do documento, resumo executivo, problema/contexto, objetivos, publico-alvo, escopo (in/out), custos estimados em tabela markdown e riscos iniciais.",
+    "2) tech_specs_md deve conter: requisitos funcionais/nao funcionais, arquitetura, stack e justificativa, modelo de dados de alto nivel, criterios de aceitacao, custos tecnicos em tabela markdown.",
+    "3) Se o projeto tiver tag IoT, inclua em tech_specs_md uma tabela BOM IoT com colunas: Componente | Qtde | Custo unitario | Custo total.",
+    "4) roadmap_md deve conter fases por periodo, entregaveis, dependencias, indicadores de progresso e estimativa de custos por fase em tabela markdown.",
+    "5) Sempre informe custos em reais (R$), com valores estimados e total.",
+    "6) Nao repetir o titulo do projeto em todos os documentos; cada documento deve ter cabecalho apropriado ao tipo.",
     "",
     "Payload do projeto:",
     JSON.stringify(safePayload, null, 2)
@@ -100,10 +109,63 @@ const parseModelOutput = (rawText) => {
 
   const objectCandidate = findFirstJsonObject(rawText);
   if (objectCandidate) {
-    return JSON.parse(objectCandidate);
+    try {
+      return JSON.parse(objectCandidate);
+    } catch (_error) {
+      console.warn("[geminiService] object candidate JSON parse failed");
+    }
+  }
+
+  const tolerant = parseTolerantKeySections(rawText);
+  if (tolerant) {
+    console.warn("[geminiService] tolerant key-section parser used");
+    return tolerant;
   }
 
   throw new Error("Could not parse Gemini response as JSON");
+};
+
+const decodeLooseValue = (value) =>
+  String(value || "")
+    .replace(/\\"/g, '"')
+    .replace(/\\n/g, "\n")
+    .replace(/\\t/g, "\t")
+    .replace(/\\r/g, "");
+
+const parseTolerantKeySections = (text) => {
+  const source = String(text || "");
+  if (!source) {
+    return null;
+  }
+
+  const section =
+    source.match(
+      new RegExp(`${JSON_START_DELIMITER}([\\s\\S]*?)${JSON_END_DELIMITER}`)
+    )?.[1] || source;
+
+  const general = section.match(
+    /"general_md"\s*:\s*"([\s\S]*?)"\s*,\s*"tech_specs_md"/
+  )?.[1];
+  const tech = section.match(
+    /"tech_specs_md"\s*:\s*"([\s\S]*?)"\s*,\s*"roadmap_md"/
+  )?.[1];
+  const roadmap = section.match(
+    /"roadmap_md"\s*:\s*"([\s\S]*?)"\s*,\s*"suggested_title"/
+  )?.[1];
+  const suggested = section.match(
+    /"suggested_title"\s*:\s*"([\s\S]*?)"\s*}/
+  )?.[1];
+
+  if (!general || !tech || !roadmap) {
+    return null;
+  }
+
+  return {
+    general_md: decodeLooseValue(general).trim(),
+    tech_specs_md: decodeLooseValue(tech).trim(),
+    roadmap_md: decodeLooseValue(roadmap).trim(),
+    suggested_title: decodeLooseValue(suggested || "").trim()
+  };
 };
 
 const normalizeResult = (parsed) => ({
@@ -125,21 +187,28 @@ const buildModelCandidates = () => {
 
 const callGemini = async ({ model, apiKey, prompt }) => {
   const url = `${GEMINI_API_BASE_URL}/${model}:generateContent?key=${apiKey}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-  return fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }]
-        }
-      ]
-    })
-  });
+  try {
+    return await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
+          }
+        ]
+      }),
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
 
 const generateProjectDocs = async (projectPayload) => {
@@ -154,55 +223,73 @@ const generateProjectDocs = async (projectPayload) => {
 
   console.info("[geminiService] starting generation");
 
-  let response = null;
-  let responseBody = "";
+  let lastError = null;
   for (const model of modelCandidates) {
+    let response = null;
+    let responseBody = "";
+
     try {
       console.info(`[geminiService] trying model: ${model}`);
       response = await callGemini({ model, apiKey, prompt });
       responseBody = await response.text();
     } catch (error) {
-      console.error("[geminiService] request failed:", error.message);
-      throw httpError(502, "Failed to reach Gemini API");
+      const isTimeout = error?.name === "AbortError";
+      console.error(
+        "[geminiService] request failed:",
+        isTimeout ? `timeout (${REQUEST_TIMEOUT_MS}ms)` : error.message
+      );
+      lastError = httpError(
+        502,
+        isTimeout
+          ? "Gemini request timed out"
+          : "Failed to reach Gemini API"
+      );
+      continue;
     }
 
-    if (response.ok) {
-      console.info(`[geminiService] model accepted: ${model}`);
-      break;
-    }
+    if (!response.ok) {
+      const isModelNotFound =
+        response.status === 404 &&
+        responseBody.toLowerCase().includes("not found");
 
-    const isModelNotFound =
-      response.status === 404 &&
-      responseBody.toLowerCase().includes("not found");
+      if (isModelNotFound) {
+        console.warn(`[geminiService] model not available: ${model}. Trying fallback...`);
+        continue;
+      }
 
-    if (!isModelNotFound) {
       console.error("[geminiService] Gemini API error:", response.status, responseBody);
-      throw httpError(502, "Gemini API returned an error");
+      lastError = httpError(502, "Gemini API returned an error");
+      continue;
     }
 
-    console.warn(`[geminiService] model not available: ${model}. Trying fallback...`);
+    console.info(`[geminiService] model accepted: ${model}`);
+    let apiResponse;
+    try {
+      apiResponse = JSON.parse(responseBody);
+    } catch (error) {
+      console.error("[geminiService] invalid JSON response from Gemini");
+      lastError = httpError(502, "Gemini API returned invalid JSON");
+      continue;
+    }
+
+    const rawText = extractTextFromGeminiResponse(apiResponse);
+
+    let parsed;
+    try {
+      parsed = parseModelOutput(rawText);
+    } catch (error) {
+      console.error("[geminiService] parse failed for model", model, error.message);
+      lastError = httpError(502, "Failed to parse Gemini response");
+      continue;
+    }
+
+    const normalized = normalizeResult(parsed);
+    console.info("[geminiService] generation completed");
+    return normalized;
   }
 
-  if (!response || !response.ok) {
-    console.error("[geminiService] no valid model available:", modelCandidates.join(", "));
-    throw httpError(502, "No compatible Gemini model available for generateContent");
-  }
-
-  const apiResponse = JSON.parse(responseBody);
-  const rawText = extractTextFromGeminiResponse(apiResponse);
-
-  let parsed;
-  try {
-    parsed = parseModelOutput(rawText);
-  } catch (error) {
-    console.error("[geminiService] parse failed:", error.message);
-    throw httpError(502, "Failed to parse Gemini response");
-  }
-
-  const normalized = normalizeResult(parsed);
-  console.info("[geminiService] generation completed");
-
-  return normalized;
+  console.error("[geminiService] no usable result from candidate models:", modelCandidates.join(", "));
+  throw lastError || httpError(502, "No compatible Gemini model available for generateContent");
 };
 
 module.exports = {

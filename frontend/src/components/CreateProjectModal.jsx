@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useToast from "../context/useToast.js";
 import api from "../lib/api.js";
@@ -81,6 +81,8 @@ function CreateProjectModal({ open, onClose }) {
   const [form, setForm] = useState(initialState);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState(null);
 
   const handleChange = (key) => (event) => {
     setForm((current) => ({ ...current, [key]: event.target.value }));
@@ -110,15 +112,14 @@ function CreateProjectModal({ open, onClose }) {
     });
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const validateAndBuildPayload = () => {
     setError("");
 
     if (!form.description.trim()) {
       const message = "Descricao e obrigatoria.";
       setError(message);
       addToast({ title: "Validacao", message, tone: "warning" });
-      return;
+      return null;
     }
 
     const payload = toPayload(form);
@@ -126,16 +127,37 @@ function CreateProjectModal({ open, onClose }) {
       const message = "Informe ao menos uma tag.";
       setError(message);
       addToast({ title: "Validacao", message, tone: "warning" });
+      return null;
+    }
+
+    return payload;
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const payload = validateAndBuildPayload();
+    if (!payload) {
+      return;
+    }
+
+    setPendingPayload(payload);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmGenerate = async () => {
+    if (!pendingPayload) {
       return;
     }
 
     try {
+      setConfirmOpen(false);
       setLoading(true);
-      const { data } = await api.post("/projects/generate", payload, {
+      const { data } = await api.post("/projects/generate", pendingPayload, {
         headers: { "Idempotency-Key": generateIdempotencyKey() }
       });
 
       setForm(initialState);
+      setPendingPayload(null);
       onClose();
       addToast({
         title: "Projeto criado",
@@ -152,11 +174,20 @@ function CreateProjectModal({ open, onClose }) {
     }
   };
 
+  const handleCloseAll = useCallback(() => {
+    if (loading) {
+      return;
+    }
+    setConfirmOpen(false);
+    setPendingPayload(null);
+    onClose();
+  }, [loading, onClose]);
+
   return (
     <>
       <Modal
         open={open && !loading}
-        onClose={onClose}
+        onClose={handleCloseAll}
         title="Criar projeto"
         className="modal--project"
       >
@@ -164,7 +195,6 @@ function CreateProjectModal({ open, onClose }) {
           <div className="stack-sm">
             <h2 className="heading-sm">Criar projeto</h2>
             <p className="body-sm">Preencha os campos para gerar os 3 documentos automaticamente.</p>
-            <Chip tone="warning">Esta acao vai consumir 1 credito.</Chip>
           </div>
 
           <div className="project-form-grid">
@@ -273,7 +303,7 @@ function CreateProjectModal({ open, onClose }) {
           {error ? <p className="form-error">{error}</p> : null}
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)" }}>
-            <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
+            <Button type="button" variant="ghost" onClick={handleCloseAll} disabled={loading}>
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
@@ -281,6 +311,43 @@ function CreateProjectModal({ open, onClose }) {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal
+        open={confirmOpen && !loading}
+        onClose={() => setConfirmOpen(false)}
+        title="Confirmar geracao"
+      >
+        <div className="stack-md">
+          <div className="stack-sm">
+            <h3 className="heading-sm">Confirmar geracao de projeto</h3>
+            <p className="body-sm">
+              Esta acao consumira <strong>1 credito</strong> da sua conta.
+            </p>
+          </div>
+
+          <div className="stack-sm">
+            <p className="body-xs">
+              <strong>Categoria:</strong> {form.category.trim() || "Nao informada"}
+            </p>
+            <p className="body-xs">
+              <strong>Tags:</strong>{" "}
+              {pendingPayload?.tags?.length ? pendingPayload.tags.join(", ") : "Nao informadas"}
+            </p>
+            <p className="body-xs">
+              <strong>Custo maximo:</strong> R$ {Number(form.maxCost || 0).toFixed(2)}
+            </p>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: "var(--space-2)" }}>
+            <Button type="button" variant="ghost" onClick={() => setConfirmOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="button" onClick={handleConfirmGenerate}>
+              Confirmar e gerar
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       <Modal

@@ -50,10 +50,44 @@ const deleteProject = async (req, res, next) => {
   }
 };
 
+const exportProjectPdf = async (req, res, next) => {
+  try {
+    const result = await projectsService.exportProjectPdf({
+      userId: req.user.id,
+      projectId: req.params.id,
+      scope: req.query.scope,
+      type: req.query.type
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${result.filename}"`);
+    return res.status(200).send(result.buffer);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const exportProjectsBatchPdf = async (req, res, next) => {
+  try {
+    const result = await projectsService.exportProjectsBatchPdf({
+      userId: req.user.id,
+      projectIds: req.body.projectIds
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${result.filename}"`);
+    return res.status(200).send(result.buffer);
+  } catch (error) {
+    return next(error);
+  }
+};
+
 module.exports = {
   listProjects,
   getProjectById,
   updateProject,
   generateProject,
-  deleteProject
+  deleteProject,
+  exportProjectPdf,
+  exportProjectsBatchPdf
 };

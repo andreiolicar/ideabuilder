@@ -6,7 +6,9 @@ const {
   listProjectsSchema,
   projectIdSchema,
   updateProjectSchema,
-  generateProjectSchema
+  generateProjectSchema,
+  exportProjectPdfSchema,
+  exportProjectsBatchPdfSchema
 } = require("./projects.schemas");
 
 const router = express.Router();
@@ -17,6 +19,16 @@ router.post(
   generationRateLimit,
   validate(generateProjectSchema),
   projectsController.generateProject
+);
+router.post(
+  "/export/pdf",
+  validate(exportProjectsBatchPdfSchema),
+  projectsController.exportProjectsBatchPdf
+);
+router.get(
+  "/:id/export/pdf",
+  validate(exportProjectPdfSchema),
+  projectsController.exportProjectPdf
 );
 router.get("/:id", validate(projectIdSchema), projectsController.getProjectById);
 router.patch("/:id", validate(updateProjectSchema), projectsController.updateProject);

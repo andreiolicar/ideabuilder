@@ -49,9 +49,37 @@ const generateProjectSchema = {
   })
 };
 
+const exportProjectPdfSchema = {
+  params: z.object({
+    id: z.string().uuid()
+  }),
+  query: z
+    .object({
+      scope: z.enum(["document", "project"]),
+      type: z.enum(["GENERAL", "TECH_SPECS", "ROADMAP"]).optional()
+    })
+    .superRefine((value, ctx) => {
+      if (value.scope === "document" && !value.type) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["type"],
+          message: "type is required when scope=document"
+        });
+      }
+    })
+};
+
+const exportProjectsBatchPdfSchema = {
+  body: z.object({
+    projectIds: z.array(z.string().uuid()).min(1).max(50)
+  })
+};
+
 module.exports = {
   listProjectsSchema,
   projectIdSchema,
   updateProjectSchema,
-  generateProjectSchema
+  generateProjectSchema,
+  exportProjectPdfSchema,
+  exportProjectsBatchPdfSchema
 };

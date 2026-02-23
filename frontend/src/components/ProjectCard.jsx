@@ -11,7 +11,7 @@ function simplifyTitle(title) {
   return normalized.split(":")[0].trim();
 }
 
-function ProjectCard({ project }) {
+function ProjectCard({ project, selectable = false, selected = false, onToggleSelect }) {
   return (
     <Link to={`/projects/${project.id}`} className="block">
       <Card className="h-full animate-in" style={{ transition: "transform var(--transition-fast)" }}>
@@ -20,6 +20,19 @@ function ProjectCard({ project }) {
             <h3 className="heading-sm">{simplifyTitle(project.title)}</h3>
             <p className="body-sm">{project.category || "Sem categoria"}</p>
           </div>
+          {selectable ? (
+            <button
+              type="button"
+              className={["project-select-check", selected ? "is-selected" : ""].join(" ")}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onToggleSelect?.(project.id, !selected);
+              }}
+            >
+              <span>{selected ? "✓" : ""}</span>
+            </button>
+          ) : null}
         </div>
 
         <div style={{ marginTop: "var(--space-4)", display: "flex", gap: "var(--space-2)", flexWrap: "wrap" }}>

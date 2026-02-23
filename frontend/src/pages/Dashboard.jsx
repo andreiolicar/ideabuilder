@@ -19,6 +19,7 @@ import {
 import useAuth from "../context/useAuth.js";
 import useToast from "../context/useToast.js";
 import api from "../lib/api.js";
+import { downloadFromAxiosPdfResponse } from "../lib/download.js";
 
 const initialFilters = {
   search: "",
@@ -39,6 +40,8 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
+  const [selectedProjectIds, setSelectedProjectIds] = useState([]);
+  const [exportingBatch, setExportingBatch] = useState(false);
 
   const fetchProjects = async (nextFilters) => {
     setLoading(true);
@@ -85,6 +88,63 @@ function Dashboard() {
   };
 
   const balance = useMemo(() => meta.balance ?? 0, [meta.balance]);
+
+  const toggleProjectSelection = (projectId, checked) => {
+    setSelectedProjectIds((current) => {
+      if (!checked) {
+        return current.filter((id) => id !== projectId);
+      }
+
+      if (current.includes(projectId)) {
+        return current;
+      }
+
+      if (current.length >= 50) {
+        addToast({
+          title: "Limite de exportacao",
+          message: "Voce pode selecionar no maximo 50 projetos por PDF.",
+          tone: "warning"
+        });
+        return current;
+      }
+
+      return [...current, projectId];
+    });
+  };
+
+  const clearSelection = () => setSelectedProjectIds([]);
+
+  const exportSelectedProjects = async () => {
+    if (selectedProjectIds.length === 0) {
+      addToast({
+        title: "Selecao vazia",
+        message: "Selecione ao menos um projeto para exportar.",
+        tone: "warning"
+      });
+      return;
+    }
+
+    try {
+      setExportingBatch(true);
+      const response = await api.post(
+        "/projects/export/pdf",
+        { projectIds: selectedProjectIds },
+        { responseType: "blob" }
+      );
+      downloadFromAxiosPdfResponse(response, "projetos-selecionados.pdf");
+      addToast({
+        title: "Exportacao concluida",
+        message: `${selectedProjectIds.length} projeto(s) exportado(s) em PDF.`,
+        tone: "success"
+      });
+    } catch (requestError) {
+      const message =
+        requestError?.response?.data?.message || "Nao foi possivel exportar os projetos selecionados.";
+      addToast({ title: "Erro", message, tone: "error" });
+    } finally {
+      setExportingBatch(false);
+    }
+  };
 
   return (
     <div className="dashboard-layout">
@@ -140,7 +200,18 @@ function Dashboard() {
             <h1 className="heading-sm">Dashboard</h1>
             <p className="body-xs">Seu hub para projetos e documentacoes de TCC.</p>
           </div>
-          <Button onClick={() => setCreateOpen(true)}>Criar</Button>
+          <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+            {selectedProjectIds.length > 0 ? (
+              <span className="badge badge--info">{selectedProjectIds.length} selecionado(s)</span>
+            ) : null}
+            <Button variant="secondary" onClick={clearSelection} disabled={selectedProjectIds.length === 0 || exportingBatch}>
+              Limpar selecao
+            </Button>
+            <Button variant="secondary" onClick={exportSelectedProjects} disabled={selectedProjectIds.length === 0 || exportingBatch}>
+              {exportingBatch ? "Exportando..." : "Exportar selecionados (PDF)"}
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>Criar</Button>
+          </div>
         </div>
 
         <Card className="stack-md animate-in">
@@ -189,7 +260,15 @@ function Dashboard() {
             ? Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton key={index} className="h-40 w-full" />
               ))
-            : projects.map((project) => <ProjectCard key={project.id} project={project} />)}
+            : projects.map((project) => (
+                <ProjectCard
+                  key={project.id}
+                  project={project}
+                  selectable
+                  selected={selectedProjectIds.includes(project.id)}
+                  onToggleSelect={toggleProjectSelection}
+                />
+              ))}
         </section>
 
         <div className="flex-between" style={{ gap: "var(--space-3)", flexWrap: "wrap" }}>
