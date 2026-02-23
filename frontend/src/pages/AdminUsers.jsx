@@ -121,7 +121,7 @@ function AdminUsers() {
             key: "menu",
             title: "Menu",
             items: [
-              { key: "dashboard", label: "Dashboard", to: "/", icon: <DashboardIcon /> }
+              { key: "dashboard", label: "Dashboard", to: "/dashboard", icon: <DashboardIcon /> }
             ]
           },
           {

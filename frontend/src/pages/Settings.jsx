@@ -137,7 +137,7 @@ function Settings() {
       {
         key: "menu",
         title: "Menu",
-        items: [{ key: "dashboard", label: "Dashboard", to: "/", icon: <DashboardIcon /> }]
+        items: [{ key: "dashboard", label: "Dashboard", to: "/dashboard", icon: <DashboardIcon /> }]
       },
       ...(isAdmin
         ? [

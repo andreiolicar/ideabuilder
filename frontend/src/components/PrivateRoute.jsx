@@ -10,7 +10,7 @@ function PrivateRoute({ children, role }) {
   }
 
   if (role && user?.role !== role) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return children;

@@ -7,6 +7,7 @@ import Card from "../components/ui/Card.jsx";
 import Input from "../components/ui/Input.jsx";
 import Spinner from "../components/ui/Spinner.jsx";
 import useToast from "../context/useToast.js";
+import PublicAuthLayout from "../components/landing/PublicAuthLayout.jsx";
 
 const mapRegisterErrorMessage = (error) => {
   const status = error?.response?.status;
@@ -32,7 +33,7 @@ const mapRegisterErrorMessage = (error) => {
 };
 
 function Register() {
-  const { register } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { addToast } = useToast();
 
@@ -54,7 +55,7 @@ function Register() {
         message: "Cadastro realizado com sucesso.",
         tone: "success"
       });
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (submitError) {
       const message = mapRegisterErrorMessage(submitError);
       addToast({ title: "Erro de cadastro", message, tone: "error" });
@@ -64,8 +65,9 @@ function Register() {
   };
 
   return (
-    <main className="auth-shell">
-      <Card elevated corners className="w-full max-w-[420px] animate-in">
+    <PublicAuthLayout isAuthenticated={isAuthenticated}>
+      <section className="auth-shell">
+        <Card elevated corners className="w-full max-w-[420px] animate-in">
         <div className="flex-center" style={{ marginBottom: "var(--space-5)" }}>
           <div className="app-icon app-icon--lg">
             <AuthIcon />
@@ -136,8 +138,9 @@ function Register() {
             Entrar
           </Link>
         </p>
-      </Card>
-    </main>
+        </Card>
+      </section>
+    </PublicAuthLayout>
   );
 }
 

@@ -156,7 +156,7 @@ function Dashboard() {
             key: "menu",
             title: "Menu",
             items: [
-              { key: "dashboard", label: "Dashboard", active: true, icon: <DashboardIcon /> }
+              { key: "dashboard", label: "Dashboard", to: "/dashboard", active: true, icon: <DashboardIcon /> }
             ]
           },
           ...(user?.role === "ADMIN"

@@ -4,6 +4,7 @@ import Admin from "./pages/Admin.jsx";
 import AdminLedger from "./pages/AdminLedger.jsx";
 import AdminUsers from "./pages/AdminUsers.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
 import Project from "./pages/Project.jsx";
 import Profile from "./pages/Profile.jsx";
@@ -13,10 +14,11 @@ import Settings from "./pages/Settings.jsx";
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <PrivateRoute>
             <Dashboard />

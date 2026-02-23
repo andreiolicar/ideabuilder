@@ -8,6 +8,7 @@ import Input from "../components/ui/Input.jsx";
 import Spinner from "../components/ui/Spinner.jsx";
 import useToast from "../context/useToast.js";
 import api from "../lib/api.js";
+import PublicAuthLayout from "../components/landing/PublicAuthLayout.jsx";
 
 const mapLoginErrorMessage = (error) => {
   const status = error?.response?.status;
@@ -33,7 +34,7 @@ const mapLoginErrorMessage = (error) => {
 };
 
 function Login() {
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { addToast } = useToast();
 
@@ -91,7 +92,7 @@ function Login() {
         message: "Bem-vindo ao TCC Idea Builder.",
         tone: "success"
       });
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (submitError) {
       const message = mapLoginErrorMessage(submitError);
       addToast({ title: "Erro de login", message, tone: "error" });
@@ -203,8 +204,9 @@ function Login() {
   };
 
   return (
-    <main className="auth-shell">
-      <Card elevated corners className="w-full max-w-[420px] animate-in">
+    <PublicAuthLayout isAuthenticated={isAuthenticated}>
+      <section className="auth-shell">
+        <Card elevated corners className="w-full max-w-[420px] animate-in">
         <div className="flex-center" style={{ marginBottom: "var(--space-5)" }}>
           <div className="app-icon app-icon--lg">
             <AuthIcon />
@@ -368,8 +370,9 @@ function Login() {
             Criar conta
           </Link>
         </p>
-      </Card>
-    </main>
+        </Card>
+      </section>
+    </PublicAuthLayout>
   );
 }
 

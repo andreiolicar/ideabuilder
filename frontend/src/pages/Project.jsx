@@ -118,7 +118,7 @@ function Project() {
             key: "menu",
             title: "Menu",
             items: [
-              { key: "dashboard", label: "Dashboard", to: "/", icon: <DashboardIcon /> }
+              { key: "dashboard", label: "Dashboard", to: "/dashboard", icon: <DashboardIcon /> }
             ]
           },
           ...(user?.role === "ADMIN"
@@ -144,7 +144,7 @@ function Project() {
         ]}
         footer={
           <div style={{ display: "grid", gap: "var(--space-2)" }}>
-            <Button fullWidth variant="secondary" onClick={() => navigate("/")}>
+            <Button fullWidth variant="secondary" onClick={() => navigate("/dashboard")}>
               <span className="nav-item-icon"><BackIcon /></span>
               Dashboard
             </Button>
@@ -159,7 +159,7 @@ function Project() {
       <main className="dashboard-main">
         <div className="main-topbar">
           <div className="main-topbar-left">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
               <span className="nav-item-icon"><BackIcon /></span>
               Voltar
             </Button>
@@ -180,7 +180,7 @@ function Project() {
               try {
                 setDeleting(true);
                 await api.delete(`/projects/${id}`);
-                navigate("/", { replace: true });
+                navigate("/dashboard", { replace: true });
               } catch (requestError) {
                 setError(requestError?.response?.data?.message || "Nao foi possivel excluir o projeto.");
               } finally {
