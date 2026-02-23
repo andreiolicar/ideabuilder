@@ -4,11 +4,6 @@ const { httpError } = require("../../utils/httpError");
 
 const PAGE_MARGIN = 35;
 const PROJECT_DOC_ORDER = ["GENERAL", "TECH_SPECS", "ROADMAP"];
-const TYPE_LABEL = {
-  GENERAL: "Geral",
-  TECH_SPECS: "Especificacoes Tecnicas",
-  ROADMAP: "Roadmap"
-};
 const TYPE_FILE_SUFFIX = {
   GENERAL: "geral",
   TECH_SPECS: "tech",
@@ -87,16 +82,6 @@ const ensureSpace = (doc, neededHeight = 24) => {
   }
   addTrackedPage(doc);
   return true;
-};
-
-const renderSectionTitle = (doc, title) => {
-  ensureSpace(doc, 40);
-  doc.moveDown(0.2);
-  doc.x = PAGE_MARGIN;
-  doc.font("Helvetica-Bold").fontSize(13).fillColor("#111827");
-  drawText(doc, title, { x: PAGE_MARGIN, width: getAvailableWidth(doc), align: "left", indent: 0 });
-  doc.moveDown(0.3);
-  doc.x = PAGE_MARGIN;
 };
 
 const renderProjectCover = (doc, project, index, total) => {
@@ -452,7 +437,6 @@ const renderSingleProjectScope = (doc, project, scope, type) => {
 
   if (scope === "document") {
     const selectedDocument = getDocumentByType(project, type);
-    renderSectionTitle(doc, TYPE_LABEL[type] || type);
     renderMarkdown(doc, selectedDocument.contentMd);
     return;
   }
@@ -462,7 +446,6 @@ const renderSingleProjectScope = (doc, project, scope, type) => {
       addTrackedPage(doc);
     }
     const selectedDocument = getDocumentByType(project, documentType);
-    renderSectionTitle(doc, TYPE_LABEL[documentType]);
     renderMarkdown(doc, selectedDocument.contentMd);
   });
 };
@@ -474,7 +457,6 @@ const renderBatchScope = (doc, projects) => {
     PROJECT_DOC_ORDER.forEach((documentType) => {
       addTrackedPage(doc);
       const selectedDocument = getDocumentByType(project, documentType);
-      renderSectionTitle(doc, TYPE_LABEL[documentType]);
       renderMarkdown(doc, selectedDocument.contentMd);
     });
   });
